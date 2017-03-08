@@ -1,0 +1,13 @@
+# Comment
+
+NODE
+    5,3
+    4,2 ; 3,5 ; 4,3
+ENDNODE
+
+NODE
+    3,5
+    5,3 ; 4,3
+ENDNODE
+
+# Comment
