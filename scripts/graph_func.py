@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 from os.path import dirname, abspath
-from math import sqrt
+from math import sqrt, radians
+
+
+# For representing a Point in a coordinate system
+class Point:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
 # For representing a Directed Graph
@@ -8,9 +16,35 @@ from math import sqrt
 #     a list of Node objects
 class Graph:
 
-    # Takes a path (relative to current directory) to a file containing a graph representation
-    def __init__(self, path):
-        self.nodelist = readFileToNodes(path)
+    # Takes an array of Node objects, which make up the Graph (optional)
+    def __init__(self, nodes=None):
+        self.nodes = nodes if nodes else []
+
+    # String representation of a Graph object
+    def __str__(self):
+        to_str = ""
+        for node in self.nodes[:-1]:
+            to_str += "%s\n" % (node)
+        if len(self.nodes) > 0:
+            to_str += "%s" % (self.nodes[-1])
+        return to_str
+
+    # Takes another Graph object
+    # Adds all Nodes from that Graph to this Graph (without creating duplicates)
+    def addGraph(self, graph):
+        for node in graph.nodes:
+            self.addNode(node)
+
+    # Takes a Node object
+    # Adds that Node to this Graph (without creating duplicates)
+    def addNode(self, node):
+        current_node = getNodeFromList(self.nodes, node.x, node.y)
+        if current_node:
+            for e in node.out_edges:
+                self.addNode(e)
+                current_node.addOutEdge(e)
+        else:
+            self.nodes.append(node)
 
 
 # For representing a Node
@@ -20,7 +54,7 @@ class Graph:
 class Node:
 
     # Takes (x, y)-coordinates for this Node
-    # and optionally a list of Node objects, to which there is an out-edge from this Node
+    # and an array of Node objects, to which there is an out-edge from this Node (optional)
     def __init__(self, x, y, out_edges=None):
         self.x = x
         self.y = y
@@ -28,16 +62,22 @@ class Node:
 
     # String representation of a Node object
     def __str__(self):
-        #to_str = '(' + str(self.x) + ', ' + str(self.y) + ') ['
-        to_str = "(%s, %s) [" % (str(self.x), str(self.y))
-        for n in self.out_edges:
-            to_str += "(%s, %s)" % (str(n.x), str(n.y))
+        to_str = "(%s, %s) [" % (self.x, self.y)
+        for node in self.out_edges[:-1]:
+            to_str += "(%s, %s) " % (node.x, node.y)
+        if len(self.out_edges) > 0:
+            to_str += "(%s, %s)" % (self.out_edges[-1].x, self.out_edges[-1].y)
         to_str += "]"
         return to_str
 
-    # Adds an outgoing edge from this Node to the given Node object
+    # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
     def addOutEdge(self, node):
-        self.out_edges.append(node)
+        out_edge = getNodeFromList(self.out_edges, node.x, node.y)
+        if out_edge:
+            for e in node.out_edges:
+                out_edge.addOutEdge(e)
+        else:
+            self.out_edges.append(node)
 
     # Returns the length of an edge between this Node and the given Node object
     def getEdgeLength(self, to_node):
@@ -45,19 +85,27 @@ class Node:
 
 
 # Takes an array of Node objects and (x,y)-coordinates for a Node
-# If there is a Node object with given coordinates in the given array: Returns Node object
-# Otherwise returns: None 
-def getNodeFromList(nodelist, (x, y)):
+# If there is a Node object with given coordinates in the given array:
+#     Returns that Node object
+# Otherwise:
+#     Reurns None 
+def getNodeFromList(nodelist, x, y):
     for node in nodelist:
         if node.x == x and node.y == y:
+            # Node object found
             return node
+    # Node object Not found
     return None
 
 
-# Takes a path (relative to current directory) to a file containing a graph representation
-# If parsing was completed without syntax errors: Returns an array of Node objects
-# Otherwise: Returns an empty array
-def readFileToNodes(path):
+# Takes a path (relative to current directory) to a text file containing a Graph representation
+# The textfile should be in the format specified in 'example_graph.txt'
+#
+# If parsing was completed without syntax errors:
+#     Returns a Graph object with all nodes in its nodelist
+# Otherwise:
+#     Returns a Graph object with an empty array as its nodelist
+def readFileToGraph(path):
     nodes = []
     current_node = None
     dirpath = dirname(abspath(__file__))
@@ -112,7 +160,7 @@ def readFileToNodes(path):
                                     break
                                 (x, y) = (int(elem[0]), int(elem[1]))
                                 # If the connected Node is not already in the node-list, create a new Node object for it
-                                outedge = getNodeFromList(nodes, (x, y))
+                                outedge = getNodeFromList(nodes, x, y)
                                 if not outedge:
                                     outedge = Node(x, y)
                                     nodes.append(outedge)
@@ -126,7 +174,7 @@ def readFileToNodes(path):
                                 break
                             (x, y) = (int(array[0]), int(array[1]))
                             # If the current Node is not already in the node-list, create a new Node object for it
-                            current_node = getNodeFromList(nodes, (x, y))
+                            current_node = getNodeFromList(nodes, x, y)
                             if not current_node:
                                 current_node = Node(x, y)
                                 nodes.append(current_node)
@@ -145,15 +193,15 @@ def readFileToNodes(path):
                     print "Syntax error on line %s in '%s'" % (line_counter, path)
                     return []
 
-        return nodes
+        return Graph(nodes)
 
 
-# Takes a list of Node objects and a filename
-# Stores the Node data in a file with given filename
-def saveNodesToFile(nodelist, filename):
+# Takes a Graph and a filename
+# Stores the Graph data in a file with given filename
+def saveGraphToFile(graph, filename):
     with open(filename, "w") as file:
 
-        for node in nodelist:
+        for node in graph.nodes:
             file.write("NODE\n")
             file.write("    %s,%s\n" % (node.x, node.y))
 
@@ -165,3 +213,54 @@ def saveNodesToFile(nodelist, filename):
             if node.out_edges:
                 file.write("\n")
             file.write("ENDNODE\n\n")
+
+
+# # Takes an array of Point objects
+# # Returns a Directed Graph, with an edge from each Point to the next one in the array
+# def pointsToGraph(points):
+#     graph = Graph()
+
+#     for point in points:
+#         graph.addNode(Node(point.x, point.y))
+    
+#     for i in range(len(points)-1):
+#         current_node = getNodeFromList(graph.nodes, points[i].x, points[i].y)
+#         next_node = getNodeFromList(graph.nodes, points[i+1].x, points[i+1].y)
+#         current_node.addOutEdge(next_node)
+
+#     return graph
+
+
+# Takes a Graph, two Points with (x, y)-coordinates for start and end point, 
+# and vehicle angle (in degrees)
+# Returns the shortest path between start and end point
+def shortestPath(graph, start, end, theta):
+
+    # Normalizing theta:
+    theta = theta % 360
+
+    # Vehicle angle: bottom-to-top
+    if theta > 45 and theta <= 135:
+        # Hitta alla inom 20 i x-led, sen narmast under i y-led
+        print 'bottom-to-top'
+    # Vehicle angle: right-to-left
+    elif theta > 135 and theta <= 225:
+        # Hitta alla inom 20 i y-led, sen narmast over i x-led
+        print 'right-to-left'
+    # Vehicle angle: top-to-bottom
+    elif theta > 225 and theta <= 315:
+        #Hitta alla inom 20 i x-led, sen narmast over i y-led
+        print 'top-to-bottom'
+    # Vehicle angle: left-to-right
+    elif theta > 315 or theta <=45:
+        # Hitta alla inom 20 i y-led, sen narmast under i x-led
+        print 'left-to-right'
+
+    print start.x, start.y, end.x, end.y, theta
+
+
+#def getAllInRangeX:
+#def getAllInRangeY:
+#def getClosestX:
+#def getClosestY:
+

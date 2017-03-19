@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from os.path import dirname, abspath
+
+
+# Takes a path (relative to current directory) to a an image file containing a Map representation
+# The file should be in '.png'-format
+#
+# Returns an array of rows, where each row is an array of elements
+def readFileToMatrix(path):
+    dirpath = dirname(abspath(__file__))
+    matrix = np.asarray(cv2.imread(dirpath + path, 0), dtype=np.uint8).tolist()
+
+    # Going through all elements, adjusting their value to match [0, 1, 2]
+    # Where:
+    #     0 = Black
+    #     1 = White
+    #     2 = Grey
+    for row in range(len(matrix)):
+        for elem in range(len(matrix[row])):
+            # Not black
+            if matrix[row][elem] != 0:
+                # White
+                if matrix[row][elem] == 255:
+                    matrix[row][elem] = 1
+                # Black-ish --> black
+                elif matrix[row][elem] == 98:
+                    matrix[row][elem] = 0
+                # Grey
+                else:
+                    matrix[row][elem] = 2
+
+    plt.imshow(matrix)
+    plt.show()
+    return matrix

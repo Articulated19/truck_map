@@ -1,0 +1,20 @@
+# An example file,
+# demonstrating the correct format used for Graph representation
+
+# This line is a comment.
+
+# A Node declaration starts with 'NODE' and ends with 'ENDNODE'
+# The body of the declaration consists of:
+#     1. The (x, y)-coordinates for this Node
+#     2. A list of (x, y)-coordinates for all Nodes, to which there is an out-edge from this Node
+#        The list is separated by semicolon ';'
+
+NODE
+    5,3
+    4,2 ; 3,5 ; 4,3
+ENDNODE
+
+NODE
+    3,5
+    5,3 ; 4,3
+ENDNODE
