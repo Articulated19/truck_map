@@ -46,6 +46,19 @@ class Graph:
         else:
             self.nodes.append(node)
 
+    # Takes (x,y)-coordinates for a Node
+    # If there is a Node object with given coordinates in this Graph:
+    #     Returns that Node object
+    # Otherwise:
+    #     Reurns None 
+    def getNode(self, x, y):
+        for node in self.nodes:
+            if node.x == x and node.y == y:
+                # Node object found
+                return node
+        # Node object Not found
+        return None
+
 
 # For representing a Node
 # A Node object consists of:
@@ -73,10 +86,7 @@ class Node:
     # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
     def addOutEdge(self, node):
         out_edge = getNodeFromList(self.out_edges, node.x, node.y)
-        if out_edge:
-            for e in node.out_edges:
-                out_edge.addOutEdge(e)
-        else:
+        if not out_edge:
             self.out_edges.append(node)
 
     # Returns the length of an edge between this Node and the given Node object
@@ -104,9 +114,10 @@ def getNodeFromList(nodelist, x, y):
 # If parsing was completed without syntax errors:
 #     Returns a Graph object with all nodes in its nodelist
 # Otherwise:
-#     Returns a Graph object with an empty array as its nodelist
+#     Returns None
 def readFileToGraph(path):
-    nodes = []
+    #nodes = []
+    graph = Graph()
     current_node = None
     dirpath = dirname(abspath(__file__))
     line_counter = 0
@@ -120,7 +131,9 @@ def readFileToGraph(path):
         for line in file:
             # Line counter, for debugging of input file
             line_counter += 1
+            # Removing whitespaces and tabs
             line = line.replace(" ", "")
+            line = line.replace("\t", "")
 
             # Ignoring comments and empty lines
             if not line.startswith("#") and not line.startswith("\n"):
@@ -131,7 +144,7 @@ def readFileToGraph(path):
                         begin = True
                     else:
                         print "Syntax error on line %s in '%s'" % (line_counter, path)
-                        return []
+                        return None
 
                 # End of node declaration
                 elif line == "ENDNODE\n":
@@ -141,7 +154,7 @@ def readFileToGraph(path):
                         current_node = None
                     else:
                         print "Syntax error on line %s in '%s'" % (line_counter, path)
-                        return []
+                        return None
 
                 # Coordinates for current Node and its out-edges (connected Nodes)
                 elif line[0].isdigit():
@@ -156,28 +169,32 @@ def readFileToGraph(path):
                             for elem in array:
                                 elem = elem.split(",")
                                 valid = True if len(elem) == 2 and elem[0].isdigit() and elem[1].isdigit() else False
+                                # Break on Syntax error
                                 if not valid:
                                     break
+
                                 (x, y) = (int(elem[0]), int(elem[1]))
                                 # If the connected Node is not already in the node-list, create a new Node object for it
-                                outedge = getNodeFromList(nodes, x, y)
+                                outedge = getNodeFromList(graph.nodes, x, y)
                                 if not outedge:
                                     outedge = Node(x, y)
-                                    nodes.append(outedge)
+                                    graph.addNode(outedge)
                                 current_node.addOutEdge(outedge)
 
                         # Current Node
                         elif len(array) == 1:
-                            array = array[0].split(",")
-                            valid = True if len(array) == 2 and array[1].isdigit() else False
+                            elem = array[0].split(",")
+                            valid = True if len(elem) == 2 and elem[1].isdigit() else False
+                            # Break on Syntax error
                             if not valid:
                                 break
-                            (x, y) = (int(array[0]), int(array[1]))
+
+                            (x, y) = (int(elem[0]), int(elem[1]))
                             # If the current Node is not already in the node-list, create a new Node object for it
-                            current_node = getNodeFromList(nodes, x, y)
+                            current_node = getNodeFromList(graph.nodes, x, y)
                             if not current_node:
                                 current_node = Node(x, y)
-                                nodes.append(current_node)
+                                graph.addNode(current_node)
 
                         # Syntax error
                         else:
@@ -186,14 +203,14 @@ def readFileToGraph(path):
                     # Syntax error
                     if not valid:
                         print "Syntax error on line %s in '%s'" % (line_counter, path)
-                        return []
+                        return None
 
                 # Syntax error
                 else:
                     print "Syntax error on line %s in '%s'" % (line_counter, path)
-                    return []
+                    return None
 
-        return Graph(nodes)
+        return graph
 
 
 # Takes a Graph and a filename
@@ -215,20 +232,22 @@ def saveGraphToFile(graph, filename):
             file.write("ENDNODE\n\n")
 
 
-# # Takes an array of Point objects
-# # Returns a Directed Graph, with an edge from each Point to the next one in the array
-# def pointsToGraph(points):
-#     graph = Graph()
+# Takes an array of Point objects
+# Returns a Directed Graph, with an edge from each Point to the next one in the array
+def pointsToGraph(points):
+    graph = Graph()
 
-#     for point in points:
-#         graph.addNode(Node(point.x, point.y))
+    # Creating Node objects for all points
+    for point in points:
+        graph.addNode(Node(point.x, point.y))
     
-#     for i in range(len(points)-1):
-#         current_node = getNodeFromList(graph.nodes, points[i].x, points[i].y)
-#         next_node = getNodeFromList(graph.nodes, points[i+1].x, points[i+1].y)
-#         current_node.addOutEdge(next_node)
+    # Creating an edge from each Node to the next one in the array
+    for i in range(len(points)-1):
+        current_node = getNodeFromList(graph.nodes, points[i].x, points[i].y)
+        next_node = getNodeFromList(graph.nodes, points[i+1].x, points[i+1].y)
+        current_node.addOutEdge(next_node)
 
-#     return graph
+    return graph
 
 
 # Takes a Graph, two Points with (x, y)-coordinates for start and end point, 

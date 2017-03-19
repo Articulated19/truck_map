@@ -7,7 +7,7 @@ from truck_map.srv import GetMap
 from map_func import readFileToMatrix
 
 
-MAP_PATH = '/map.png'
+MAP_PATH = "/map.png"
 
 PUBLISH_TOPIC = "map_updated"
 MAP_SERVICE = "get_map"
@@ -41,8 +41,8 @@ def matrixToMap(matrix):
     return Map(rows=rows)
 
 
-if __name__ == '__main__':
-    rospy.init_node('map', anonymous=True)
+if __name__ == "__main__":
+    rospy.init_node("map", anonymous=True)
     MapNode()
     try:
         rospy.spin()
@@ -54,4 +54,3 @@ if __name__ == '__main__':
 
 # rosrun truck_map map_node.py
 # rosservice call /get_map
-
