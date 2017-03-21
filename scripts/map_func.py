@@ -26,12 +26,29 @@ def readFileToMatrix(path):
                 if matrix[row][elem] == 255:
                     matrix[row][elem] = 1
                 # Black-ish --> black
-                elif matrix[row][elem] == 98:
+                elif matrix[row][elem] <= 98:
                     matrix[row][elem] = 0
                 # Grey
                 else:
                     matrix[row][elem] = 2
 
-    plt.imshow(matrix)
-    plt.show()
+    #plt.imshow(matrix)
+    #plt.show()
     return matrix
+
+
+# Takes a matrix, the scale of that matrix (eg. 10 for scale 1:10)
+# and (x, y)-coordinates for an element (w.r.t. to the scale of the matrix)
+#
+# If given coordinates are valid for the given matrix:
+#     Returns the value of element at given index,
+#     with respect to the scale of the given matrix
+# If given coordinates are out of bounds:
+#     Returns None 
+def getValue(matrix, scale, x, y):
+    (ix, iy) = (int(x/scale), int(y/scale))
+    try:
+        return matrix[iy][ix]
+    except IndexError:
+        print "Index out of bounds"
+        return None

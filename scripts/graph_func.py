@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 from os.path import dirname, abspath
 from math import sqrt, radians
+from enum import Enum
+import matplotlib.pyplot as plt
 
 
 # For representing a Point in a coordinate system
 class Point:
 
+    # Takes (x, y)-coordinates for a Point
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -38,7 +41,7 @@ class Graph:
     # Takes a Node object
     # Adds that Node to this Graph (without creating duplicates)
     def addNode(self, node):
-        current_node = getNodeFromList(self.nodes, node.x, node.y)
+        current_node = self.getNode(node.x, node.y)
         if current_node:
             for e in node.out_edges:
                 self.addNode(e)
@@ -46,7 +49,7 @@ class Graph:
         else:
             self.nodes.append(node)
 
-    # Takes (x,y)-coordinates for a Node
+    # Takes (x, y)-coordinates for a Node
     # If there is a Node object with given coordinates in this Graph:
     #     Returns that Node object
     # Otherwise:
@@ -85,27 +88,26 @@ class Node:
 
     # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
     def addOutEdge(self, node):
-        out_edge = getNodeFromList(self.out_edges, node.x, node.y)
+        out_edge = self.getOutEdge(node.x, node.y)
         if not out_edge:
             self.out_edges.append(node)
+
+    # Takes (x,y)-coordinates for a Node
+    # If there is a Node object with given coordinates in the out-edges from this Node:
+    #     Returns that Node object
+    # Otherwise:
+    #     Reurns None 
+    def getOutEdge(self, x, y):
+        for node in self.out_edges:
+            if node.x == x and node.y == y:
+                # Node object found
+                return node
+        # Node object Not found
+        return None
 
     # Returns the length of an edge between this Node and the given Node object
     def getEdgeLength(self, to_node):
         return sqrt((to_node.x - self.x)**2 + (to_node.y - self.y)**2)
-
-
-# Takes an array of Node objects and (x,y)-coordinates for a Node
-# If there is a Node object with given coordinates in the given array:
-#     Returns that Node object
-# Otherwise:
-#     Reurns None 
-def getNodeFromList(nodelist, x, y):
-    for node in nodelist:
-        if node.x == x and node.y == y:
-            # Node object found
-            return node
-    # Node object Not found
-    return None
 
 
 # Takes a path (relative to current directory) to a text file containing a Graph representation
@@ -116,7 +118,6 @@ def getNodeFromList(nodelist, x, y):
 # Otherwise:
 #     Returns None
 def readFileToGraph(path):
-    #nodes = []
     graph = Graph()
     current_node = None
     dirpath = dirname(abspath(__file__))
@@ -175,7 +176,7 @@ def readFileToGraph(path):
 
                                 (x, y) = (int(elem[0]), int(elem[1]))
                                 # If the connected Node is not already in the node-list, create a new Node object for it
-                                outedge = getNodeFromList(graph.nodes, x, y)
+                                outedge = graph.getNode(x, y)
                                 if not outedge:
                                     outedge = Node(x, y)
                                     graph.addNode(outedge)
@@ -191,7 +192,7 @@ def readFileToGraph(path):
 
                             (x, y) = (int(elem[0]), int(elem[1]))
                             # If the current Node is not already in the node-list, create a new Node object for it
-                            current_node = getNodeFromList(graph.nodes, x, y)
+                            current_node = graph.getNode(x, y)
                             if not current_node:
                                 current_node = Node(x, y)
                                 graph.addNode(current_node)
@@ -214,7 +215,8 @@ def readFileToGraph(path):
 
 
 # Takes a Graph and a filename
-# Stores the Graph data in a file with given filename
+# Stores the Graph data in a file with given filename,
+# in a format that can be re-read by using 'readFileToGraph(path_to_savefile)'
 def saveGraphToFile(graph, filename):
     with open(filename, "w") as file:
 
@@ -243,8 +245,8 @@ def pointsToGraph(points):
     
     # Creating an edge from each Node to the next one in the array
     for i in range(len(points)-1):
-        current_node = getNodeFromList(graph.nodes, points[i].x, points[i].y)
-        next_node = getNodeFromList(graph.nodes, points[i+1].x, points[i+1].y)
+        current_node = graph.getNode(points[i].x, points[i].y)
+        next_node = graph.getNode(points[i+1].x, points[i+1].y)
         current_node.addOutEdge(next_node)
 
     return graph
@@ -255,31 +257,137 @@ def pointsToGraph(points):
 # Returns the shortest path between start and end point
 def shortestPath(graph, start, end, theta):
 
+    # Returns an array with all Nodes that are in range (set by 'limit') x-wise from given Point
+    def getAllInRangeX(nodes, limit, point):
+        node_list = []
+        for node in nodes:
+            # Ignoring all nodes that are not in range x-wise
+            if node.x >= point.x-limit and node.x <= point.x+limit:
+                node_list.append(node)
+        return node_list
+
+    # Returns an array with all Nodes that are in range (set by 'limit') y-wise from given Point
+    def getAllInRangeY(nodes, limit, point):
+        node_list = []
+        for node in nodes:
+            # Ignoring all nodes that are not in range y-wise
+            if node.y >= point.y-limit and node.y <= point.y+limit:
+                node_list.append(node)
+        return node_list
+
+    Direction = Enum("Direction", "above below leftof rightof")
+
+    # Returns the Node object from given array of Nodes, which is the nearest one 
+    # to the left of resp. to the right of the given Point (depending on given direction).
+    # The Node also has to be in safe distance y-wise, w.r.t. the x-wise difference
+    #
+    # For parameter 'direction', only 'leftof' or 'rightof' is accepted
+    def getClosestX(nodes, direction, point):
+        nearest_node = None
+        nearest_dist = float("inf")
+        for node in nodes:
+            # If the given Node exactly matches one of the other Nodes
+            if node.x == point.x and node.y == point.y:
+                return node
+            # Finds nearest Node to the right of the given Node
+            if direction == Direction.rightof:
+                dist = node.x-point.x
+                if node.x > point.x and dist < nearest_dist and abs(node.y-point.y) >= dist:
+                    nearest_node = node
+                    nearest_dist = dist
+            # Finds nearest Node to the left of the given Node
+            elif direction == Direction.leftof:
+                dist = point.x-node.x
+                if node.x < point.x and dist < nearest_dist and abs(node.y-point.y) >= dist:
+                    nearest_node = node
+                    nearest_dist = dist
+            # Invalid direction parameter
+            else:
+                print "Invalid value for parameter 'direction'. Accepted values: 'leftof' or 'rightof'"
+
+        return nearest_node
+
+    # Returns the Node object from given array of Nodes, which is the nearest one 
+    # above resp. below the given Point (depending on given direction)
+    # The Node also has to be in safe distance x-wise, w.r.t. the y-wise difference
+    #
+    # For parameter 'direction', only 'above' or 'below' is accepted
+    def getClosestY(nodes, direction, point):
+        nearest_node = None
+        nearest_dist = float("inf")
+        for node in nodes:
+            # If the given Node exactly matches one of the other Nodes
+            if node.x == point.x and node.y == point.y:
+                return node
+            # Finds nearest Node above the given Node
+            if direction == Direction.above:
+                dist = point.y-node.y
+                if node.y < point.y and dist < nearest_dist and abs(node.x-point.x) >= dist:
+                    nearest_node = node
+                    nearest_dist = dist
+            # Finds nearest Node below the given Node
+            elif direction == Direction.below:
+                dist = node.y-point.y
+                if node.y > point.y and dist < nearest_dist and abs(node.x-point.x) >= dist:
+                    nearest_node = node
+                    nearest_dist = dist
+            # Invalid direction parameter
+            else:
+                print "Invalid value for parameter 'direction'. Accepted values: 'above' or 'below'"
+
+
+    # Used to specify search range for finding closest point
+    limit = 150
     # Normalizing theta:
     theta = theta % 360
 
-    # Vehicle angle: bottom-to-top
+    # Connecting start and end point to the Graph, in an optimal way
+    # Vehicle direction: bottom-to-top
     if theta > 45 and theta <= 135:
+        # Finding all Nodes within 'limit' x-range from given start Point,
+        # then choosing the one which is closest in y-range
+        nodes = getAllInRangeX(graph.nodes, limit, start)
+        print nodes                                                                              ##########################
+        start_edge = getClosestY(graph.nodes, Direction.below, start)
         # Hitta alla inom 20 i x-led, sen narmast under i y-led
         print 'bottom-to-top'
-    # Vehicle angle: right-to-left
+        print start_edge
+    # Vehicle direction: right-to-left
     elif theta > 135 and theta <= 225:
         # Hitta alla inom 20 i y-led, sen narmast over i x-led
         print 'right-to-left'
-    # Vehicle angle: top-to-bottom
+    # Vehicle direction: top-to-bottom
     elif theta > 225 and theta <= 315:
         #Hitta alla inom 20 i x-led, sen narmast over i y-led
         print 'top-to-bottom'
-    # Vehicle angle: left-to-right
+    # Vehicle direction: left-to-right
     elif theta > 315 or theta <=45:
         # Hitta alla inom 20 i y-led, sen narmast under i x-led
         print 'left-to-right'
 
-    print start.x, start.y, end.x, end.y, theta
+        return nearest_node
 
 
-#def getAllInRangeX:
-#def getAllInRangeY:
-#def getClosestX:
-#def getClosestY:
+# For plotting a Graph
+def plotGraph(graph):
+    print "Plotting graph"
 
+    # Graph settings
+    plt.axis('scaled')
+    plt.xlim( (0, 5000) )
+    plt.ylim( (9000, 0) )
+
+    plt.xlabel('x-axis')
+    plt.ylabel('y-axis')
+    plt.title('Graph')
+
+    ax = plt.axes()
+    plt.grid(True)
+
+    # Plotting all egraph edges
+    for node in graph.nodes:
+        for out_edge in node.out_edges:
+            dx = out_edge.x - node.x
+            dy = out_edge.y - node.y
+            ax.arrow(node.x, node.y, dx, dy, head_width=60, head_length=60, fc='b', ec='b')
+    #plt.show()
