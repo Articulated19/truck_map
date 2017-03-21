@@ -275,66 +275,6 @@ def shortestPath(graph, start, end, theta):
                 node_list.append(node)
         return node_list
 
-    Direction = Enum("Direction", "above below leftof rightof")
-
-    # Returns the Node object from given array of Nodes, which is the nearest one 
-    # to the left of resp. to the right of the given Point (depending on given direction).
-    # The Node also has to be in safe distance y-wise, w.r.t. the x-wise difference
-    #
-    # For parameter 'direction', only 'leftof' or 'rightof' is accepted
-    def getClosestX(nodes, direction, point):
-        nearest_node = None
-        nearest_dist = float("inf")
-        for node in nodes:
-            # If the given Node exactly matches one of the other Nodes
-            if node.x == point.x and node.y == point.y:
-                return node
-            # Finds nearest Node to the right of the given Node
-            if direction == Direction.rightof:
-                dist = node.x-point.x
-                if node.x > point.x and dist < nearest_dist and abs(node.y-point.y) >= dist:
-                    nearest_node = node
-                    nearest_dist = dist
-            # Finds nearest Node to the left of the given Node
-            elif direction == Direction.leftof:
-                dist = point.x-node.x
-                if node.x < point.x and dist < nearest_dist and abs(node.y-point.y) >= dist:
-                    nearest_node = node
-                    nearest_dist = dist
-            # Invalid direction parameter
-            else:
-                print "Invalid value for parameter 'direction'. Accepted values: 'leftof' or 'rightof'"
-
-        return nearest_node
-
-    # Returns the Node object from given array of Nodes, which is the nearest one 
-    # above resp. below the given Point (depending on given direction)
-    # The Node also has to be in safe distance x-wise, w.r.t. the y-wise difference
-    #
-    # For parameter 'direction', only 'above' or 'below' is accepted
-    def getClosestY(nodes, direction, point):
-        nearest_node = None
-        nearest_dist = float("inf")
-        for node in nodes:
-            # If the given Node exactly matches one of the other Nodes
-            if node.x == point.x and node.y == point.y:
-                return node
-            # Finds nearest Node above the given Node
-            if direction == Direction.above:
-                dist = point.y-node.y
-                if node.y < point.y and dist < nearest_dist and abs(node.x-point.x) >= dist:
-                    nearest_node = node
-                    nearest_dist = dist
-            # Finds nearest Node below the given Node
-            elif direction == Direction.below:
-                dist = node.y-point.y
-                if node.y > point.y and dist < nearest_dist and abs(node.x-point.x) >= dist:
-                    nearest_node = node
-                    nearest_dist = dist
-            # Invalid direction parameter
-            else:
-                print "Invalid value for parameter 'direction'. Accepted values: 'above' or 'below'"
-
 
     # Used to specify search range for finding closest point
     limit = 150
@@ -344,14 +284,8 @@ def shortestPath(graph, start, end, theta):
     # Connecting start and end point to the Graph, in an optimal way
     # Vehicle direction: bottom-to-top
     if theta > 45 and theta <= 135:
-        # Finding all Nodes within 'limit' x-range from given start Point,
-        # then choosing the one which is closest in y-range
-        nodes = getAllInRangeX(graph.nodes, limit, start)
-        print nodes                                                                              ##########################
-        start_edge = getClosestY(graph.nodes, Direction.below, start)
-        # Hitta alla inom 20 i x-led, sen narmast under i y-led
+        # Hitta alla inom limit i x-led, sen narmast under i y-led
         print 'bottom-to-top'
-        print start_edge
     # Vehicle direction: right-to-left
     elif theta > 135 and theta <= 225:
         # Hitta alla inom 20 i y-led, sen narmast over i x-led
