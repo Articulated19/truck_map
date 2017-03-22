@@ -330,11 +330,16 @@ def shortestPath(graph, start, end):
 
 # Help function for shortestPath
 # Takes a Graph and two Nodes for start and end point
-# Returns the shortest path between start and end point as an array of Points
+#
+# If there is a path from the start Node to the end Node:
+#     Returns the shortest path between them as an array of Point objects
+# Otherwise:
+#     Returns None
 def findShortestPath(graph, start_node, end_node):
     unvisited_set = graph.copyGraph()
     start = unvisited_set.getNode(start_node.x, start_node.y)
     end = unvisited_set.getNode(end_node.x, end_node.y)
+    path = []
 
     # Changing the value of 'distance' to 0 for the start Node
     # ('distance' is set to infinity for every Node, by default, on object creation)
@@ -344,40 +349,53 @@ def findShortestPath(graph, start_node, end_node):
     # ('visited' is set to False for every Node, by default, on object creation)
     current_node = start
 
-    # Going through all out-edges from 'current_node', where the neighbouring Node is unvisited
-    # Calculating the distance to each such Node from the start point, via 'current_node',
-    # and updating their 'distance' value if this distance is smaller than the current value
-    for out_edge in current_node.out_edges:
-        if not out_edge.visited:
-            edge_length = current_node.getEdgeLength(out_edge)
-            new_distance = current_node.distance + edge_length
 
-            if new_distance < out_edge.distance:
-                out_edge.distance = new_distance
 
-    # Removing 'current_node' from the unvisited set
-    # (it is now considered visited, and will never be checked again) 
-    current_node.visited = True
-    unvisited_set.removeNode(current_node.x, current_node.y)
 
+
+    # Repeating until the end Node has been visited
+    # (or until we know that there is no path from the start Node to the end Node)
+    while not end.visited:
+
+        # Checking if there are any more Nodes that can be visited,
+        # returning None if there aren't any (since that means that the end Node can't be reached)
+        if current_node.distance == float("inf"):
+            return None
+
+        # Going through all out-edges from 'current_node', where the neighbouring Node is unvisited
+        # Calculating the distance to each such Node from the start point, via 'current_node',
+        # and updating their 'distance' value if this distance is smaller than the current value
+        for out_edge in current_node.out_edges:
+            if not out_edge.visited:
+                edge_length = current_node.getEdgeLength(out_edge)
+                new_distance = current_node.distance + edge_length
+
+                if new_distance < out_edge.distance:
+                    out_edge.distance = new_distance
+
+        # Removing 'current_node' from the unvisited set
+        # (it is now considered visited, and will never be checked again)
+        current_node.visited = True
+        unvisited_set.removeNode(current_node.x, current_node.y)
+
+        # Selecting the unvisited Node that has the smallest 'distance' as the new 'current_node'
+        smallest_node = None
+        smallest_distance = float("inf")
+        for node in unvisited_set.nodes:
+            if node.distance < smallest_distance:
+                smallest_node = node
+                smallest_distance = node.distance
+
+        current_node = smallest_node
+
+
+
+# Bakåtkonstruera pathen #############################################
+
+    return path
 
 #####################################################################################
 
-    if end.visited:
-        print "stop"
-
-
-    for node in unvisited_set.nodes:
-        if node.distance < float("inf"):
-            break
-
-    #If the destination node has been marked visited (when planning a route between two specific nodes)
-    #or if the smallest tentative distance among the nodes in the unvisited set is infinity
-    #(when planning a complete traversal; occurs when there is no connection between the initial node
-    #and remaining unvisited nodes), then stop. The algorithm has finished.
-
-    #Otherwise, select the unvisited node that is marked with the smallest tentative distance, 
-    #set it as the new "current node", and go back to step 3.
 
 
 
