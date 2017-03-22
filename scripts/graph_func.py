@@ -252,76 +252,88 @@ def pointsToGraph(points):
     return graph
 
 
-# Takes a Graph, two Points with (x, y)-coordinates for start and end point, 
-# and vehicle angle (in degrees)
+# Takes a Graph, two Points with (x, y)-coordinates for start and end point
 # Returns the shortest path between start and end point
 def shortestPath(graph, start, end, theta):
-
-    # Returns an array with all Nodes that are in range (set by 'limit') x-wise from given Point
-    def getAllInRangeX(nodes, limit, point):
-        node_list = []
-        for node in nodes:
-            # Ignoring all nodes that are not in range x-wise
-            if node.x >= point.x-limit and node.x <= point.x+limit:
-                node_list.append(node)
-        return node_list
-
-    # Returns an array with all Nodes that are in range (set by 'limit') y-wise from given Point
-    def getAllInRangeY(nodes, limit, point):
-        node_list = []
-        for node in nodes:
-            # Ignoring all nodes that are not in range y-wise
-            if node.y >= point.y-limit and node.y <= point.y+limit:
-                node_list.append(node)
-        return node_list
-
 
     # Used to specify search range for finding closest point
     limit = 150
     # Normalizing theta:
     theta = theta % 360
 
-    # Connecting start and end point to the Graph, in an optimal way
-    # Vehicle direction: bottom-to-top
-    if theta > 45 and theta <= 135:
-        # Hitta alla inom limit i x-led, sen narmast under i y-led
-        print 'bottom-to-top'
-    # Vehicle direction: right-to-left
-    elif theta > 135 and theta <= 225:
-        # Hitta alla inom 20 i y-led, sen narmast over i x-led
-        print 'right-to-left'
-    # Vehicle direction: top-to-bottom
-    elif theta > 225 and theta <= 315:
-        #Hitta alla inom 20 i x-led, sen narmast over i y-led
-        print 'top-to-bottom'
-    # Vehicle direction: left-to-right
-    elif theta > 315 or theta <=45:
-        # Hitta alla inom 20 i y-led, sen narmast under i x-led
-        print 'left-to-right'
+    # Finding start and end Node
+    # (the Nodes which are closest to start resp. end point, and in range)
+    start_node = None
+    end_node = None
 
-        return nearest_node
+    ###########################################################################
+
+
+# Takes an array of Node objects, a range limit and a Point object
+# Returns an array with all Nodes that are in range (set by given 'limit') x-wise from given Point
+def getAllInRangeX(nodes, limit, point):
+    node_list = []
+    for node in nodes:
+        # Ignoring all nodes that are not in range x-wise
+        if node.x >= point.x-limit and node.x <= point.x+limit:
+            node_list.append(node)
+    return node_list
+
+# Takes an array of Node objects, a range limit and a Point object
+# Returns an array with all Nodes that are in range (set by given 'limit') y-wise from given Point
+def getAllInRangeY(nodes, limit, point):
+    node_list = []
+    for node in nodes:
+        # Ignoring all nodes that are not in range y-wise
+        if node.y >= point.y-limit and node.y <= point.y+limit:
+            node_list.append(node)
+    return node_list
+
+# Takes an array of Node objects and a Point object
+# Returns the Node that is (x-wise) closest to given Point
+def getClosestX(nodes, point):
+    closest_node = None
+    closest_dist = float("inf")
+
+    for node in nodes:
+        dist = abs(point.x - node.x)
+        # If no Node can be closer
+        if dist == 0:
+            return node
+        elif dist < closest_dist:
+            closest_dist = dist
+            closest_node = node
+
+    return closest_node
+
+# Takes an array of Node objects and a Point object
+# Returns the Node that is (y-wise) closest to given Point
+def getClosestY(nodes, point):
+    closest_node = None
+    closest_dist = float("inf")
+    
+    for node in nodes:
+        dist = abs(point.y - node.y)
+        # If no Node can be closer
+        if dist == 0:
+            return node
+        elif dist < closest_dist:
+            closest_dist = dist
+            closest_node = node
+
+    return closest_node
 
 
 # For plotting a Graph
-def plotGraph(graph):
-    print "Plotting graph"
-
-    # Graph settings
-    plt.axis('scaled')
-    plt.xlim( (0, 5000) )
-    plt.ylim( (9000, 0) )
-
-    plt.xlabel('x-axis')
-    plt.ylabel('y-axis')
-    plt.title('Graph')
-
+# Parameter 'color' should be in format "color",
+# eg. "b" for blue, "k" for black, etc
+def plotGraph(graph, color):
     ax = plt.axes()
-    plt.grid(True)
 
-    # Plotting all egraph edges
+    # Plotting all graph edges
     for node in graph.nodes:
         for out_edge in node.out_edges:
             dx = out_edge.x - node.x
             dy = out_edge.y - node.y
-            ax.arrow(node.x, node.y, dx, dy, head_width=60, head_length=60, fc='b', ec='b')
-    #plt.show()
+            #ax.arrow(node.x, node.y, dx, dy, head_width=80, head_length=100, fc=color, ec=color)
+            ax.arrow(node.x, node.y, dx, dy, fc=color, ec=color)

@@ -9,7 +9,7 @@ from os.path import dirname, abspath
 # The file should be in '.png'-format
 #
 # Returns an array of rows, where each row is an array of elements
-def readFileToMatrix(path):
+def readImgToMatrix(path):
     dirpath = dirname(abspath(__file__))
     matrix = np.asarray(cv2.imread(dirpath + path, 0), dtype=np.uint8).tolist()
 
@@ -25,9 +25,6 @@ def readFileToMatrix(path):
                 # White
                 if matrix[row][elem] == 255:
                     matrix[row][elem] = 1
-                # Black-ish --> black
-                elif matrix[row][elem] <= 98:
-                    matrix[row][elem] = 0
                 # Grey
                 else:
                     matrix[row][elem] = 2
