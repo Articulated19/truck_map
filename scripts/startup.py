@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from os.path import dirname, abspath
 
-from graphpoints import *
-
 
 IMG_PATH = "/map.png"
 GRAPH_PATH = "/graph.txt"

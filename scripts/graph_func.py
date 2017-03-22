@@ -56,11 +56,44 @@ class Graph:
     #     Reurns None 
     def getNode(self, x, y):
         for node in self.nodes:
-            if node.x == x and node.y == y:
+            if node == Node(x, y):
                 # Node object found
                 return node
         # Node object Not found
         return None
+
+    # Takes (x, y)-coordinates for a Node
+    # If there is a Node object with given coordinates in this Graph:
+    #     Removes that Node object from the Graph (but NOT from out_edges of other Nodes)
+    #     Returns True
+    # Otherwise:
+    #     Reurns False
+    def removeNode(self, x, y):
+        for i in range(len(self.nodes)):
+            if self.nodes[i] == Node(x, y):
+                # Node object found
+                self.nodes.pop(i)
+                return True
+        # Node object Not found
+        return False
+
+    # For making an independent copy of this Graph (i.e. without referencing the same objects)
+    def copyGraph(self):
+        copy = Graph()
+
+        # Copy each Node in this Graph, and add to the new Graph
+        for node in self.nodes:
+            copy.addNode(Node(node.x, node.y))
+
+        # Add all outedges
+        for node in self.nodes:
+            new_node = copy.getNode(node.x, node.y)
+
+            for out_edge in node.out_edges:
+                new_out_edge = copy.getNode(out_edge.x, out_edge.y)
+                new_node.addOutEdge(new_out_edge)
+
+        return copy
 
 
 # For representing a Node
@@ -76,6 +109,9 @@ class Node:
         self.y = y
         self.out_edges = out_edges if out_edges else []
 
+        self.distance = float("inf")
+        self.visited = False
+
     # String representation of a Node object
     def __str__(self):
         to_str = "(%s, %s) [" % (self.x, self.y)
@@ -85,6 +121,10 @@ class Node:
             to_str += "(%s, %s)" % (self.out_edges[-1].x, self.out_edges[-1].y)
         to_str += "]"
         return to_str
+
+    # Definition of equality between two Node objects
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
     # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
     def addOutEdge(self, node):
@@ -252,21 +292,95 @@ def pointsToGraph(points):
     return graph
 
 
-# Takes a Graph, two Points with (x, y)-coordinates for start and end point
-# Returns the shortest path between start and end point
-def shortestPath(graph, start, end, theta):
+# Takes a Graph and two Point objects with (x, y)-coordinates for start and end point
+# Returns the shortest path between start and end point as an array of Points
+def shortestPath(graph, start, end):
 
     # Used to specify search range for finding closest point
     limit = 150
-    # Normalizing theta:
-    theta = theta % 360
 
     # Finding start and end Node
-    # (the Nodes which are closest to start resp. end point, and in range)
+    # (the Nodes which are closest to start resp. end point)
     start_node = None
     end_node = None
 
-    ###########################################################################
+    # Start
+    # Selecting all Nodes which are in range from the start point
+    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, limit, start), limit, start)
+    # Finding the two Nodes which are closest to the start point, x-wise resp. y-wise
+    closest_x = getClosestX(nodes, start)
+    closest_y = getClosestY(nodes, start)
+    # Selecting the Node which is closest to the start point
+    dx = Node(start.x, start.y).getEdgeLength(closest_x)
+    dy = Node(start.x, start.y).getEdgeLength(closest_y)
+    start_node = closest_x if dx <= dy else closest_y
+
+    # End
+    # Selecting all Nodes which are in range from the end point
+    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, limit, end), limit, end)
+    # Finding the two Nodes which are closest to the end point, x-wise resp. y-wise
+    closest_x = getClosestX(nodes, end)
+    closest_y = getClosestY(nodes, end)
+    # Selecting the Node which is closest to the end point
+    dx = Node(end.x, end.y).getEdgeLength(closest_x)
+    dy = Node(end.x, end.y).getEdgeLength(closest_y)
+    end_node = closest_x if dx <= dy else closest_y
+
+    return findShortestPath(graph, start_node, end_node)
+
+# Help function for shortestPath
+# Takes a Graph and two Nodes for start and end point
+# Returns the shortest path between start and end point as an array of Points
+def findShortestPath(graph, start_node, end_node):
+    unvisited_set = graph.copyGraph()
+    start = unvisited_set.getNode(start_node.x, start_node.y)
+    end = unvisited_set.getNode(end_node.x, end_node.y)
+
+    # Changing the value of 'distance' to 0 for the start Node
+    # ('distance' is set to infinity for every Node, by default, on object creation)
+    start.distance = 0
+
+    # Letting the start Node be 'current_node', and setting visited to True
+    # ('visited' is set to False for every Node, by default, on object creation)
+    current_node = start
+
+    # Going through all out-edges from 'current_node', where the neighbouring Node is unvisited
+    # Calculating the distance to each such Node from the start point, via 'current_node',
+    # and updating their 'distance' value if this distance is smaller than the current value
+    for out_edge in current_node.out_edges:
+        if not out_edge.visited:
+            edge_length = current_node.getEdgeLength(out_edge)
+            new_distance = current_node.distance + edge_length
+
+            if new_distance < out_edge.distance:
+                out_edge.distance = new_distance
+
+    # Removing 'current_node' from the unvisited set
+    # (it is now considered visited, and will never be checked again) 
+    current_node.visited = True
+    unvisited_set.removeNode(current_node.x, current_node.y)
+
+
+#####################################################################################
+
+    if end.visited:
+        print "stop"
+
+
+    for node in unvisited_set.nodes:
+        if node.distance < float("inf"):
+            break
+
+    #If the destination node has been marked visited (when planning a route between two specific nodes)
+    #or if the smallest tentative distance among the nodes in the unvisited set is infinity
+    #(when planning a complete traversal; occurs when there is no connection between the initial node
+    #and remaining unvisited nodes), then stop. The algorithm has finished.
+
+    #Otherwise, select the unvisited node that is marked with the smallest tentative distance, 
+    #set it as the new "current node", and go back to step 3.
+
+
+
 
 
 # Takes an array of Node objects, a range limit and a Point object
