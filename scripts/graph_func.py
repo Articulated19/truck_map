@@ -13,6 +13,11 @@ class Point:
         self.x = x
         self.y = y
 
+    # String representation of a Point object
+    def __str__(self):
+        to_str = "%s, %s" % (self.x, self.y)
+        return to_str
+
 
 # For representing a Directed Graph
 # A Graph object consists of:
@@ -94,6 +99,20 @@ class Graph:
                 new_node.addOutEdge(new_out_edge)
 
         return copy
+
+
+# Takes an array of Node objects, and (x, y)-coordinates for a Node
+# If there is a Node object with given coordinates in the Node-array:
+#     Returns that Node object
+# Otherwise:
+#     Reurns None 
+def getNodeFromList(nodes, x, y):
+    for node in nodes:
+        if node == Node(x, y):
+            # Node object found
+            return node
+    # Node object Not found
+    return None
 
 
 # For representing a Node
@@ -337,21 +356,17 @@ def shortestPath(graph, start, end):
 #     Returns None
 def findShortestPath(graph, start_node, end_node):
     unvisited_set = graph.copyGraph()
+    visited_set = Graph()
+
     start = unvisited_set.getNode(start_node.x, start_node.y)
     end = unvisited_set.getNode(end_node.x, end_node.y)
+
     path = []
 
     # Changing the value of 'distance' to 0 for the start Node
     # ('distance' is set to infinity for every Node, by default, on object creation)
     start.distance = 0
-
-    # Letting the start Node be 'current_node', and setting visited to True
-    # ('visited' is set to False for every Node, by default, on object creation)
     current_node = start
-
-
-
-
 
     # Repeating until the end Node has been visited
     # (or until we know that there is no path from the start Node to the end Node)
@@ -375,8 +390,11 @@ def findShortestPath(graph, start_node, end_node):
 
         # Removing 'current_node' from the unvisited set
         # (it is now considered visited, and will never be checked again)
+        # Adding 'current_node' to the visited set, and setting 'visited' to True
+        # ('visited' is set to False for every Node, by default, on object creation)
         current_node.visited = True
         unvisited_set.removeNode(current_node.x, current_node.y)
+        visited_set.addNode(current_node)
 
         # Selecting the unvisited Node that has the smallest 'distance' as the new 'current_node'
         smallest_node = None
@@ -388,17 +406,29 @@ def findShortestPath(graph, start_node, end_node):
 
         current_node = smallest_node
 
+    # Backtracing to construct the path
+    current_node = end
+    path.insert(0, Point(current_node.x, current_node.y))
 
+    # Repeating until start Node is reached
+    while current_node != start:
 
-# Bakåtkonstruera pathen #############################################
+        # Going through the visited set, to find the Node which preceeds 'current_node'
+        for node in visited_set.nodes:
+            # Removing all Nodes which are definately Not part of the path,
+            # to make the next search go faster
+            if node.distance > current_node.distance:
+                visited_set.removeNode(node.x, node.y)
+
+            out_edge = getNodeFromList(node.out_edges, current_node.x, current_node.y)
+            if out_edge:
+                edge_length = node.getEdgeLength(current_node)
+                if (node.distance + edge_length) == current_node.distance:
+                    current_node = node
+                    path.insert(0, Point(current_node.x, current_node.y))
+                    break
 
     return path
-
-#####################################################################################
-
-
-
-
 
 
 # Takes an array of Node objects, a range limit and a Point object

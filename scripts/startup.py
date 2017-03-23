@@ -39,6 +39,11 @@ class Start:
         # Plotting graph
         plotGraph(self.graph, "b")
 
+        path = shortestPath(self.graph, Point(751, 8189), Point(3372, 2748))
+        xs = map(lambda x: x.x, path)
+        ys = map(lambda x: x.y, path)
+        plt.plot(xs, ys, '-r', linewidth=2.0)
+
         plt.show()
 
 

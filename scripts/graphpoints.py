@@ -8,6 +8,20 @@ from pylab import *
 from math import ceil
 
 
+"""
+
+OBS!
+
+This file is not meant to be used regularly.
+
+It mainly consists of measured and hardcoded Graph data, which is only meant to be used once 
+- to create a Graph which is then stored in a savefile.
+
+It can then serve as backup if the svaefile should be lost, or be used to edit the Graph.
+
+"""
+
+
 ARC_DIST = 50
 LIN_DIST = 200
 
