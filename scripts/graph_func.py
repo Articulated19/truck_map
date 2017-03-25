@@ -14,6 +14,7 @@ class Point:
         self.x = x
         self.y = y
 
+
     # String representation of a Point object
     def __str__(self):
         to_str = "%s, %s" % (self.x, self.y)
@@ -29,6 +30,7 @@ class Graph:
     def __init__(self, nodes=None):
         self.nodes = nodes if nodes else []
 
+
     # String representation of a Graph object
     def __str__(self):
         to_str = ""
@@ -38,11 +40,13 @@ class Graph:
             to_str += "%s" % (self.nodes[-1])
         return to_str
 
+
     # Takes another Graph object
     # Adds all Nodes from that Graph to this Graph (without creating duplicates)
     def addGraph(self, graph):
         for node in graph.nodes:
             self.addNode(node)
+
 
     # Takes a Node object
     # Adds that Node to this Graph (without creating duplicates)
@@ -55,7 +59,9 @@ class Graph:
         else:
             self.nodes.append(node)
 
+
     # Takes (x, y)-coordinates for a Node
+    #
     # If there is a Node object with given coordinates in this Graph:
     #     Returns that Node object
     # Otherwise:
@@ -68,7 +74,9 @@ class Graph:
         # Node object Not found
         return None
 
+
     # Takes (x, y)-coordinates for a Node
+    #
     # If there is a Node object with given coordinates in this Graph:
     #     Removes that Node object from the Graph (but NOT from out_edges of other Nodes)
     #     Returns True
@@ -82,6 +90,7 @@ class Graph:
                 return True
         # Node object Not found
         return False
+
 
     # For making an independent copy of this Graph (i.e. without referencing the same objects)
     def copyGraph(self):
@@ -103,6 +112,7 @@ class Graph:
 
 
 # Takes an array of Node objects, and (x, y)-coordinates for a Node
+#
 # If there is a Node object with given coordinates in the Node-array:
 #     Returns that Node object
 # Otherwise:
@@ -134,6 +144,7 @@ class Node:
         self.visited = False
         self.in_edges = []
 
+
     # String representation of a Node object
     def __str__(self):
         to_str = "(%s, %s) [" % (self.x, self.y)
@@ -144,9 +155,11 @@ class Node:
         to_str += "]"
         return to_str
 
+
     # Definition of equality between two Node objects
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+
 
     # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
     def addOutEdge(self, node):
@@ -154,7 +167,9 @@ class Node:
         if not out_edge:
             self.out_edges.append(node)
 
+
     # Takes (x,y)-coordinates for a Node
+    #
     # If there is a Node object with given coordinates in the out-edges from this Node:
     #     Returns that Node object
     # Otherwise:
@@ -166,6 +181,7 @@ class Node:
                 return node
         # Node object Not found
         return None
+
 
     # Returns the length of an edge between this Node and the given Node object
     def getEdgeLength(self, to_node):
@@ -297,6 +313,7 @@ def saveGraphToFile(graph, filename):
 
 
 # Takes an array of Point objects
+#
 # Returns a Directed Graph, with an edge from each Point to the next one in the array
 def pointsToGraph(points):
     graph = Graph()
@@ -315,6 +332,7 @@ def pointsToGraph(points):
 
 
 # Takes a Graph and two Point objects with (x, y)-coordinates for start and end point
+#
 # If there is a path from the start Point to the end Point:
 #     Returns the shortest path between them as an array of tuples of (x, y)-coordinates
 # Otherwise:
@@ -330,7 +348,7 @@ def shortestPath(graph, start, end):
     # Finding start and end Node:
     # (the Nodes which are closest to start resp. end point)
 
-    # Start
+    # Start:
     # Selecting all Nodes which are in range from the start point
     nodes = getAllInRangeX(getAllInRangeY(graph.nodes, start, search_range), start, search_range)
     # Returning None if No Node is in range
@@ -344,7 +362,7 @@ def shortestPath(graph, start, end):
     dy = Node(start.x, start.y).getEdgeLength(closest_y)
     start_node = closest_x if dx <= dy else closest_y
 
-    # End
+    # End:
     # Selecting all Nodes which are in range from the end point
     nodes = getAllInRangeX(getAllInRangeY(graph.nodes, end, search_range), end, search_range)
     # Returning None if No Node is in range
@@ -364,11 +382,16 @@ def shortestPath(graph, start, end):
 # Help function for 'shortestPath' and 'shortestPath2'
 # Takes a Graph and two Nodes for start and end point
 #
+# If the start Node is the same as the end Node:
+#     Returns []
 # If there is a path from the start Node to the end Node:
 #     Returns the shortest path between them as an array of tuples of (x, y)-coordinates
 # Otherwise:
 #     Returns None
 def findShortestPath(graph, start_node, end_node):
+    if start_node == end_node:
+        return []
+
     unvisited_set = graph.copyGraph()
 
     start = unvisited_set.getNode(start_node.x, start_node.y)
@@ -440,6 +463,7 @@ def findShortestPath(graph, start_node, end_node):
 
 
 # Takes an array of Node objects, Point object and range limits to the left resp. to the right
+#
 # Returns an array with all Nodes that are in range (set by given limits) x-wise from given Point
 def getAllInRangeX(nodes, point, range_left, range_right=None):
     range_right = range_right if range_right != None else range_left
@@ -450,7 +474,9 @@ def getAllInRangeX(nodes, point, range_left, range_right=None):
             node_list.append(node)
     return node_list
 
+
 # Takes an array of Node objects, Point object and range limits above resp. below
+#
 # Returns an array with all Nodes that are in range (set by given 'limit') y-wise from given Point
 def getAllInRangeY(nodes, point, range_above, range_below=None):
     range_below = range_below if range_below != None else range_above
@@ -461,7 +487,9 @@ def getAllInRangeY(nodes, point, range_above, range_below=None):
             node_list.append(node)
     return node_list
 
+
 # Takes an array of Node objects and a Point object
+#
 # Returns the Node that is (x-wise) closest to given Point
 def getClosestX(nodes, point):
     closest_node = None
@@ -478,7 +506,9 @@ def getClosestX(nodes, point):
 
     return closest_node
 
+
 # Takes an array of Node objects and a Point object
+#
 # Returns the Node that is (y-wise) closest to given Point
 def getClosestY(nodes, point):
     closest_node = None
@@ -498,7 +528,9 @@ def getClosestY(nodes, point):
 
 Direction = Enum("Direction", "up down left right")
 
+
 # Takes an array of Node objects, a Point object and a Direction
+#
 # Returns an array with all Nodes that have an out-edge in the given Direction
 def getAllInRightDir(nodes, point, direction):
     node_list = []
@@ -509,7 +541,9 @@ def getAllInRightDir(nodes, point, direction):
 
     return node_list
 
+
 # Takes a Node and a Direction
+#
 # If given Node has an out-edge in given Direction:
 #     Returns True
 # Otherwise:
@@ -549,6 +583,7 @@ def hasOutEdgeInRightDir(node, direction):
 
 
 # Takes a Graph and a VehicleState object
+#
 # If there is a Node with an out-edge in the right Direction (with respect to theta):
 #     Returns the closest Node which has an out-edge in the right Direction
 # Otherwise:
@@ -570,18 +605,21 @@ def getClosestToVehicle(graph, vehicle_state):
         nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range, 0), pos, search_range)
         # Selecting all Nodes which have an out-edge upwards from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.up)
+
     # Vehicle angle: right-to-left
     elif theta > 135 and theta <= 225:
         # Selecting all Nodes which are in range from the vehicle
         nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range), pos, search_range, 0)
         # Selecting all Nodes which have an out-edge to the left from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.left)
+
     # Vehicle angle: top-to-bottom
     elif theta > 225 and theta <= 315:
         # Selecting all Nodes which are in range from the vehicle
         nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, 0, search_range), pos, search_range)
         # Selecting all Nodes which have an out-edge downwards from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.down)
+
     # Vehicle angle: left-to-right
     elif theta > 315 or theta <=45:
         # Selecting all Nodes which are in range from the vehicle
@@ -592,6 +630,7 @@ def getClosestToVehicle(graph, vehicle_state):
     # Returning None if No Node is in range
     if not nodes:
         return None
+        
     # Finding the two Nodes which are closest to the vehicle, x-wise resp. y-wise
     closest_x = getClosestX(nodes, pos)
     closest_y = getClosestY(nodes, pos)

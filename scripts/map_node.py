@@ -30,6 +30,7 @@ class MapNode:
 
 
 # Takes a matrix representing a Map
+#
 # Returns the map as Map.msg-object
 def matrixToMap(matrix):
     rows = []

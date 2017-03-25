@@ -12,18 +12,12 @@ import _tkinter
 import gc
 from math import sin, cos, radians
 
-#import time
-
 
 IMG_PATH = "/map.png"
 GRAPH_PATH = "/graph.txt"
 SCALE = 10
 
-
-
-START = Point(766, 3317)
-END = Point(1193, 3342)
-
+COLORS = ["r", "c", "m", "g", "y"]
 
 
 class VehicleState:
@@ -46,29 +40,74 @@ class RefPath:
         self.path = []
 
         # To handle user input
-        self.keypress = False
+        self.valid = False
+        self.pts = None
+        self.start_point = None
+        self.exit_handler = None
+        self.key_handler = None
+        self.path_plot = None
+        self.plot_nbr = 0
+        self.ax = None
+        self.fig = None
+
 
     # Handler for 'key_press_event'
     def onKeyPress(self, event):
+
         # Enter (accepting path)
         if event.key == "enter":
-            self.keypress = True
+            self.path += self.partial_path
+            self.fig.canvas.mpl_disconnect(self.exit_handler)
             plt.close()
+
         # Backspace (discarding path)
         elif event.key == "backspace":
-            self.keypress = True
-            self.path = None
-            plt.close()
-            print "Path discarded\n====="
+            self.valid = False
+            self.pts = None
 
-    # Handler for 'close_event'
+            # Removing the plotted path
+            for i, line in enumerate(self.path_plot):
+                self.path_plot.pop(i)
+                line.remove()
+            plt.draw()
+            print "Path discarded\n====="
+            print "Select a new path"
+
+            # Letting user input a new path
+            self.createRefPath()
+
+        # 'a' or 'A' (adding to path)
+        elif event.key == "a" or event.key == "A":
+            last = self.pts[len(self.pts)-1]
+            self.start_point = Point(last[0], last[1])
+            print "Select points to add to the path"
+            
+            self.valid = False
+            self.pts = None
+
+            self.plot_nbr += 1
+            self.path += self.partial_path[:-1]
+            print "Current path:", self.path
+            
+            self.createRefPath()
+
+
+    # Handler for 'close_event' (closing down the window without accepting a path)
     def onExit(self, event):
-        if not self.keypress:
-            self.path = []
+        self.path = []
+        self.valid = True
+
+
+    # Used to plot partial paths in different colors
+    def getColor(self):
+        i = self.plot_nbr % 5
+        return COLORS[i]
+
 
     # Takes a VehicleState object,
     # and an array of tuples of (x, y)-coordinates (optional)
     # Lets user input destination and calculates the shortest path to that destination
+    #
     # Returns a reference path in the form of an array of tuples of (x, y)-coordinates
     def getRefPath(self, vehicle_state, pts=None):
         theta = vehicle_state.theta_1
@@ -80,8 +119,8 @@ class RefPath:
         # to use as a start point
         # If the vehicle is too far away from a valid start point,
         # returns []
-        start_point = getClosestToVehicle(self.graph, vehicle_state)
-        if not start_point:
+        self.start_point = getClosestToVehicle(self.graph, vehicle_state)
+        if not self.start_point:
             print "The vehicle is too far away from a valid path"
             return []
 
@@ -92,8 +131,8 @@ class RefPath:
         xlim = self.map_img.size[0]
         ylim = self.map_img.size[1]
 
-        fig = plt.figure()
-        ax = plt.axes()
+        self.fig = plt.figure()
+        self.ax = plt.axes()
 
         # Graph settings
         plt.axis("scaled")
@@ -109,90 +148,101 @@ class RefPath:
         plotGraph(self.graph, "b")
         # Plotting vehicle position and direction
         plt.plot(vx, vy, "ob", markersize=10)
-        ax.arrow(vx, vy, dx, dy, linewidth=2, head_width=100, head_length=120, fc="b", ec="b")
+        self.ax.arrow(vx, vy, dx, dy, linewidth=2, head_width=100, head_length=120, fc="b", ec="b")
         # Plotting start point
-        plt.plot(start_point.x, start_point.y, "or", markersize = 5)
+        plt.plot(self.start_point.x, self.start_point.y, "or", markersize = 5)
 
-        key_handler = None
-        valid = False
+        self.key_handler = None
+        self.valid = False
+
+        self.path = []
+        self.pts = pts
+
+        self.createRefPath()
+
+        return self.path
+
+
+    # Help function to 'getRefPath()'
+    # Lets user input destination and calculates the shortest path to that destination
+    def createRefPath(self):
+        self.exit_handler = self.fig.canvas.mpl_connect("close_event", self.onExit)
+
         # Repeating until a valid path is created
-        while not valid:
-            fig.canvas.mpl_connect("close_event", self.onExit)
-            fig.canvas.mpl_disconnect(key_handler)
-            self.path = []
-            self.keypress = False
+        while not self.valid:
+            self.fig.canvas.mpl_disconnect(self.key_handler)
+            self.partial_path = []
 
             # If 'pts' was Not given as an argument
-            if not pts:
+            if not self.pts:
                 # Gathering input
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     try:
-                        pts = ginput(n=0, timeout=0, mouse_add=1, mouse_pop=3, mouse_stop=2)
+                        self.pts = ginput(n=0, timeout=0, mouse_add=1, mouse_pop=3, mouse_stop=2)
                     except _tkinter.TclError:
                         return []
 
-            # Adding 'start_point' to 'pts'
-            pts.insert(0, (start_point.x, start_point.y))
+            # Adding 'start_point' first in 'pts'
+            self.pts.insert(0, (self.start_point.x, self.start_point.y))
 
             # If at least one point was inputted
-            if len(pts) > 1:
-                valid = True
-                start = pts[0]
+            if len(self.pts) > 1:
+                self.valid = True
+                start = self.pts[0]
 
             # Calculating shortest path between the points
-            for point in pts[1:]:
+            for point in self.pts[1:]:
                 path = shortestPath(self.graph, Point(start[0], start[1]), Point(point[0], point[1]))
-                if path:
-                    self.path += path
+                if path != None:
+                    self.partial_path += path
                     start = point
 
                 # If the given points were not in range of any Nodes,
                 # setting 'valid' to False to let user retry
                 else:
-                    valid = False
+                    self.valid = False
                     print "=====\nA path could not be created, please input new points"
                     break
 
             # If a valid path was created,
             # letting user decide whether to keep or discard the path
-            if valid:
+            if self.valid:
+
                 # Plotting the path
-                xs = map(lambda x: x[0], self.path)
-                ys = map(lambda x: x[1], self.path)
-                plt.plot(xs, ys, "-r", linewidth=2.0)
-                key_handler = fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
-                print "=====\nPress 'Enter' to keep the path, and 'Backspace' to discard"
+                xs = map(lambda x: x[0], self.partial_path)
+                ys = map(lambda x: x[1], self.partial_path)
+                self.path_plot = self.ax.plot(xs, ys, "-"+self.getColor(), linewidth=2.0)
+                self.key_handler = self.fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
+                print "=====\nPress 'Enter' to keep the path, 'a' to add to the path, 'Backspace' to discard"
                 plt.show()
 
-            pts = None
 
-        return self.path
-
-
-# Takesa RefPath object and a  a VehicleState object
+# Takes a RefPath object and a VehicleState object
 # Lets user input destination and calculates the shortest path to that destination
+#
 # Returns a reference path in the form of an array of tuples of (x, y)-coordinates
-def getRefPath(refpath_obj, vehicle_state):
-    path = None
+def callGetRefPath(refpath_obj, vehicle_state):
 
-    # Repeats until user is satisfied with the path
-    while path == None:
-        path = refpath_obj.getRefPath(vehicle_state)
+    # Letting user input a path
+    path = refpath_obj.getRefPath(vehicle_state)
 
+    # getRefPath() returns [] when closed before user has accepted a path
     if path == []:
         print "[] returned"
     else:
         print "Path returned"
+        print "Path:", path
 
     return path
 
 
+# Main, used for testing
 if __name__ == "__main__":
     refpath_obj = RefPath()
     vehicle_state = VehicleState(2770, 1430, -90)
     
-    getRefPath(refpath_obj, vehicle_state)
+    callGetRefPath(refpath_obj, vehicle_state)
 
     del refpath_obj
     gc.collect()    
