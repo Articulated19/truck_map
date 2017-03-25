@@ -22,7 +22,7 @@ It can then serve as backup if the svaefile should be lost, or be used to edit t
 """
 
 
-ARC_DIST = 50
+ARC_DIST = 100
 LIN_DIST = 200
 
 

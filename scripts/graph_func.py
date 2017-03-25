@@ -3,6 +3,7 @@ from os.path import dirname, abspath
 from math import sqrt, radians
 from enum import Enum
 import matplotlib.pyplot as plt
+import gc
 
 
 # For representing a Point in a coordinate system
@@ -128,8 +129,10 @@ class Node:
         self.y = y
         self.out_edges = out_edges if out_edges else []
 
+        # For use in shortestpath()
         self.distance = float("inf")
         self.visited = False
+        self.in_edges = []
 
     # String representation of a Node object
     def __str__(self):
@@ -312,20 +315,27 @@ def pointsToGraph(points):
 
 
 # Takes a Graph and two Point objects with (x, y)-coordinates for start and end point
-# Returns the shortest path between start and end point as an array of Points
+# If there is a path from the start Point to the end Point:
+#     Returns the shortest path between them as an array of tuples of (x, y)-coordinates
+# Otherwise:
+#     Returns None
 def shortestPath(graph, start, end):
 
     # Used to specify search range for finding closest point
-    limit = 150
+    search_range = 200
 
-    # Finding start and end Node
-    # (the Nodes which are closest to start resp. end point)
     start_node = None
     end_node = None
 
+    # Finding start and end Node:
+    # (the Nodes which are closest to start resp. end point)
+
     # Start
     # Selecting all Nodes which are in range from the start point
-    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, limit, start), limit, start)
+    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, start, search_range), start, search_range)
+    # Returning None if No Node is in range
+    if not nodes:
+        return None
     # Finding the two Nodes which are closest to the start point, x-wise resp. y-wise
     closest_x = getClosestX(nodes, start)
     closest_y = getClosestY(nodes, start)
@@ -336,7 +346,10 @@ def shortestPath(graph, start, end):
 
     # End
     # Selecting all Nodes which are in range from the end point
-    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, limit, end), limit, end)
+    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, end, search_range), end, search_range)
+    # Returning None if No Node is in range
+    if not nodes:
+        return None
     # Finding the two Nodes which are closest to the end point, x-wise resp. y-wise
     closest_x = getClosestX(nodes, end)
     closest_y = getClosestY(nodes, end)
@@ -347,16 +360,16 @@ def shortestPath(graph, start, end):
 
     return findShortestPath(graph, start_node, end_node)
 
-# Help function for shortestPath
+
+# Help function for 'shortestPath' and 'shortestPath2'
 # Takes a Graph and two Nodes for start and end point
 #
 # If there is a path from the start Node to the end Node:
-#     Returns the shortest path between them as an array of Point objects
+#     Returns the shortest path between them as an array of tuples of (x, y)-coordinates
 # Otherwise:
 #     Returns None
 def findShortestPath(graph, start_node, end_node):
     unvisited_set = graph.copyGraph()
-    visited_set = Graph()
 
     start = unvisited_set.getNode(start_node.x, start_node.y)
     end = unvisited_set.getNode(end_node.x, end_node.y)
@@ -377,24 +390,24 @@ def findShortestPath(graph, start_node, end_node):
         if current_node.distance == float("inf"):
             return None
 
-        # Going through all out-edges from 'current_node', where the neighbouring Node is unvisited
+        # Going through all unvisited out-edges from 'current_node'
         # Calculating the distance to each such Node from the start point, via 'current_node',
         # and updating their 'distance' value if this distance is smaller than the current value
         for out_edge in current_node.out_edges:
             if not out_edge.visited:
                 edge_length = current_node.getEdgeLength(out_edge)
                 new_distance = current_node.distance + edge_length
+                out_edge.in_edges.append(current_node)
 
                 if new_distance < out_edge.distance:
                     out_edge.distance = new_distance
 
         # Removing 'current_node' from the unvisited set
         # (it is now considered visited, and will never be checked again)
-        # Adding 'current_node' to the visited set, and setting 'visited' to True
+        # and setting 'visited' to True
         # ('visited' is set to False for every Node, by default, on object creation)
         current_node.visited = True
         unvisited_set.removeNode(current_node.x, current_node.y)
-        visited_set.addNode(current_node)
 
         # Selecting the unvisited Node that has the smallest 'distance' as the new 'current_node'
         smallest_node = None
@@ -408,46 +421,43 @@ def findShortestPath(graph, start_node, end_node):
 
     # Backtracing to construct the path
     current_node = end
-    path.insert(0, Point(current_node.x, current_node.y))
+    path.insert(0, (current_node.x, current_node.y))
 
     # Repeating until start Node is reached
     while current_node != start:
 
-        # Going through the visited set, to find the Node which preceeds 'current_node'
-        for node in visited_set.nodes:
-            # Removing all Nodes which are definately Not part of the path,
-            # to make the next search go faster
-            if node.distance > current_node.distance:
-                visited_set.removeNode(node.x, node.y)
+        # Going through all in-edges, to find the Node which preceeds 'current_node'
+        for node in current_node.in_edges:
+            edge_length = node.getEdgeLength(current_node)
+            if (node.distance + edge_length) == current_node.distance:
+                current_node = node
+                path.insert(0, (current_node.x, current_node.y))
+                break
 
-            out_edge = getNodeFromList(node.out_edges, current_node.x, current_node.y)
-            if out_edge:
-                edge_length = node.getEdgeLength(current_node)
-                if (node.distance + edge_length) == current_node.distance:
-                    current_node = node
-                    path.insert(0, Point(current_node.x, current_node.y))
-                    break
-
+    del unvisited_set
+    gc.collect()
     return path
 
 
-# Takes an array of Node objects, a range limit and a Point object
-# Returns an array with all Nodes that are in range (set by given 'limit') x-wise from given Point
-def getAllInRangeX(nodes, limit, point):
+# Takes an array of Node objects, Point object and range limits to the left resp. to the right
+# Returns an array with all Nodes that are in range (set by given limits) x-wise from given Point
+def getAllInRangeX(nodes, point, range_left, range_right=None):
+    range_right = range_right if range_right != None else range_left
     node_list = []
     for node in nodes:
-        # Ignoring all nodes that are not in range x-wise
-        if node.x >= point.x-limit and node.x <= point.x+limit:
+        # Selecting all Nodes that are in range x-wise
+        if node.x >= point.x-range_left and node.x <= point.x+range_right:
             node_list.append(node)
     return node_list
 
-# Takes an array of Node objects, a range limit and a Point object
+# Takes an array of Node objects, Point object and range limits above resp. below
 # Returns an array with all Nodes that are in range (set by given 'limit') y-wise from given Point
-def getAllInRangeY(nodes, limit, point):
+def getAllInRangeY(nodes, point, range_above, range_below=None):
+    range_below = range_below if range_below != None else range_above
     node_list = []
     for node in nodes:
-        # Ignoring all nodes that are not in range y-wise
-        if node.y >= point.y-limit and node.y <= point.y+limit:
+        # Selecting all Nodes that are in range y-wise
+        if node.y >= point.y-range_above and node.y <= point.y+range_below:
             node_list.append(node)
     return node_list
 
@@ -484,6 +494,113 @@ def getClosestY(nodes, point):
             closest_node = node
 
     return closest_node
+
+
+Direction = Enum("Direction", "up down left right")
+
+# Takes an array of Node objects, a Point object and a Direction
+# Returns an array with all Nodes that have an out-edge in the given Direction
+def getAllInRightDir(nodes, point, direction):
+    node_list = []
+    for node in nodes:
+        # Selecting all Nodes that have an out-edge in the right direction
+        if hasOutEdgeInRightDir(node, direction):
+            node_list.append(node)
+
+    return node_list
+
+# Takes a Node and a Direction
+# If given Node has an out-edge in given Direction:
+#     Returns True
+# Otherwise:
+#     Returns False
+def hasOutEdgeInRightDir(node, direction):
+
+    # Used to specify minimum difference between given Node and an out-edge-node,
+    # (x-wise resp. y-wise) for the edge to be considered as going in a specific Direction
+    min_offset = 50
+
+    # Going through all out-edges,
+    # returning True as soon as we find one that goes in the given Direction
+    for out_edge in node.out_edges:
+
+        if direction == Direction.up:
+            # If given Node has an out-edge upwards
+            if (node.y - out_edge.y) > min_offset:
+                return True
+
+        elif direction == Direction.down:
+            # If given Node has an out-edge downwards
+            if (node.y - out_edge.y) < -min_offset:
+                return True
+
+        elif direction == Direction.left:
+            # If given Node has an out-edge to the left
+            if (node.x - out_edge.x) > min_offset: 
+                return True
+
+        elif direction == Direction.right:
+            # If given Node has an out-edge to the right
+            if (node.x - out_edge.x) < -min_offset:
+                return True 
+
+    # No out-edge in the given Direction
+    return False
+
+
+# Takes a Graph and a VehicleState object
+# If there is a Node with an out-edge in the right Direction (with respect to theta):
+#     Returns the closest Node which has an out-edge in the right Direction
+# Otherwise:
+#     Returns None
+def getClosestToVehicle(graph, vehicle_state):
+
+    # Used to specify search range for finding closest point
+    search_range = 1000
+
+    pos = Point(vehicle_state.x, vehicle_state.y)
+    start_node = None
+
+    # Normalizing theta
+    theta = vehicle_state.theta_1 % 360
+
+    # Vehicle angle: bottom-to-top
+    if theta > 45 and theta <= 135:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range, 0), pos, search_range)
+        # Selecting all Nodes which have an out-edge upwards from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.up)
+    # Vehicle angle: right-to-left
+    elif theta > 135 and theta <= 225:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range), pos, search_range, 0)
+        # Selecting all Nodes which have an out-edge to the left from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.left)
+    # Vehicle angle: top-to-bottom
+    elif theta > 225 and theta <= 315:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, 0, search_range), pos, search_range)
+        # Selecting all Nodes which have an out-edge downwards from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.down)
+    # Vehicle angle: left-to-right
+    elif theta > 315 or theta <=45:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range), pos, 0, search_range)
+        # Selecting all Nodes which have an out-edge to the right from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.right)
+
+    # Returning None if No Node is in range
+    if not nodes:
+        return None
+    # Finding the two Nodes which are closest to the vehicle, x-wise resp. y-wise
+    closest_x = getClosestX(nodes, pos)
+    closest_y = getClosestY(nodes, pos)
+    # Selecting the Node which is closest to the vehicle:
+    dx = Node(pos.x, pos.y).getEdgeLength(closest_x)
+    dy = Node(pos.x, pos.y).getEdgeLength(closest_y)
+    start_node = closest_x if dx <= dy else closest_y
+
+    return start_node
 
 
 # For plotting a Graph
