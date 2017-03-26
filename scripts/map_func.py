@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.text as text
 from os.path import dirname, abspath
 from math import ceil
 
@@ -21,18 +22,31 @@ class Obstacle:
         self.height = height
         self.padding = padding
 
-        self.patch = patches.Rectangle(
+        self.text_x = self.x + self.width + 100
+        self.text_y = self.y - self.height
+
+        self.activated_patch = patches.Rectangle(
                 (self.x, self.y),  # Lower left corner
                 self.width,
-                self.height,
-                fc="k", ec="0.5",
-                linewidth=padding
+                -self.height,
+                fc="r", ec="0.5",
+                linewidth=padding/10
+            )
+
+        self.deactivated_patch = patches.Rectangle(
+                (self.x, self.y),  # Lower left corner
+                self.width,
+                -self.height,
+                fc="b", ec="0.5",
+                linewidth=padding/10
             )
 
         self.matrix_backup = []
 
+        # For handling user input
         self.active = False
         self.plot = None
+        self.text = None
 
 
 OBSTACLES = [
@@ -55,12 +69,25 @@ class Map:
         return (self.matrix, self.scale)
 
 
-    # Takes an Obstacle object and adds it to the matrix of this Map
-    def addObstacle(self, obstacle):
+    # Takes an Index value
+    # Adds the corresponding Obstacle from 'obstacles' to the 'matrix' of this Map
+    #
+    # If an Obstacle was added:
+    #     Returns True
+    # If given index is out of bounds, or the corresponding Obstacle is already activated:
+    #     Returns False
+    def addObstacle(self, index):
+
+        # Checking the validity of the given index
+        try:
+            obstacle = self.obstacles[index]
+        except IndexError:
+            print "Obstacle index out of bounds"
+            return False
 
         # If given obstacle is already active, there is no need to add it again
         if obstacle.active:
-            return
+            return False
 
         height = ceil(float(obstacle.height)/float(self.scale))
         width = ceil(float(obstacle.width)/float(self.scale))
@@ -87,15 +114,26 @@ class Map:
                 else:
                     self.matrix[y-i][x+j] = 0
 
-
             # Storing the old element values in 'matrix_backup' of given obstacle
             obstacle.matrix_backup.insert(i, row)
             
         obstacle.active = True
+        return True
 
 
-    # Takes an Obstacle object and removes it from the matrix of this Map
-    def removeObstacle(self, obstacle):
+    # Takes an Index value
+    # Removes the corresponding Obstacle from 'obstacles' from the 'matrix' of this Map
+    #
+    # If an Obstacle was removed:
+    #     Returns True
+    # If given index is out of bounds, or the corresponding Obstacle is already deactivated:
+    #     Returns False
+    def removeObstacle(self, index):
+        try:
+            obstacle = self.obstacles[index]
+        except IndexError:
+            print "Obstacle index out of bounds"
+            return False
 
         # If given obstacle is Not active, there is no need to reset the matrix
         if not obstacle.active:
@@ -135,7 +173,7 @@ class Map:
         try:
             return self.matrix[iy][ix]
         except IndexError:
-            print "Index out of bounds"
+            print "Map element index out of bounds"
             return None
 
 

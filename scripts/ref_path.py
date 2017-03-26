@@ -157,7 +157,15 @@ class RefPath:
         self.path = []
         self.pts = pts
 
+        # Calling help function, to create the reference path
         self.createRefPath()
+
+        # Returns [] when closed before user has accepted a path
+        if self.path == []:
+            print "=====\n[] returned"
+        else:
+            print "=====\nPath returned"
+            #print "Path:", self.path
 
         return self.path
 
@@ -217,31 +225,12 @@ class RefPath:
                 plt.show()
 
 
-# Takes a RefPath object and a VehicleState object
-# Lets user input destination and calculates the shortest path to that destination
-#
-# Returns a reference path in the form of an array of tuples of (x, y)-coordinates
-def callGetRefPath(refpath_obj, vehicle_state):
-
-    # Letting user input a path
-    path = refpath_obj.getRefPath(vehicle_state)
-
-    # getRefPath() returns [] when closed before user has accepted a path
-    if path == []:
-        print "=====\n[] returned"
-    else:
-        print "=====\nPath returned"
-        #print "Path:", path
-
-    return path
-
-
 # Main, used for testing
 if __name__ == "__main__":
     refpath_obj = RefPath()
     vehicle_state = VehicleState(2770, 1430, -90)
     
-    callGetRefPath(refpath_obj, vehicle_state)
+    path = refpath_obj.getRefPath(vehicle_state)
 
     del refpath_obj
     gc.collect()    
