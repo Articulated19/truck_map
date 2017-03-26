@@ -5,7 +5,6 @@ from map_func import *
 import matplotlib.pyplot as plt
 from pylab import ginput
 from PIL import Image
-
 from os.path import dirname, abspath
 import warnings
 import _tkinter
@@ -87,7 +86,7 @@ class RefPath:
 
             self.plot_nbr += 1
             self.path += self.partial_path[:-1]
-            print "Current path:", self.path
+            #print "Current path:", self.path
             
             self.createRefPath()
 
@@ -124,9 +123,9 @@ class RefPath:
             print "The vehicle is too far away from a valid path"
             return []
 
-        print ("Left click on the image to select points\n" +
-              "Right click to undo the last point\n" +
-              "Middle button to create the path")
+        print ("=====\n'Left click' on the image to select points\n" +
+              "'Right click' to undo the last point\n" +
+              "'Middle button' or 'Enter' to create the path")
 
         xlim = self.map_img.size[0]
         ylim = self.map_img.size[1]
@@ -229,10 +228,10 @@ def callGetRefPath(refpath_obj, vehicle_state):
 
     # getRefPath() returns [] when closed before user has accepted a path
     if path == []:
-        print "[] returned"
+        print "=====\n[] returned"
     else:
-        print "Path returned"
-        print "Path:", path
+        print "=====\nPath returned"
+        #print "Path:", path
 
     return path
 
