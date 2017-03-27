@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+# license removed for brevity
 from map_func import *
 
+import rospy
 from os.path import dirname, abspath
 from PIL import Image
 

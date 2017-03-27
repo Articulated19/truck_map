@@ -3,7 +3,6 @@ from os.path import dirname, abspath
 from math import sqrt, radians
 from enum import Enum
 import matplotlib.pyplot as plt
-import gc
 
 
 # For representing a Point in a coordinate system
@@ -645,13 +644,13 @@ def getClosestToVehicle(graph, vehicle_state):
 # For plotting a Graph
 # Parameter 'color' should be in format "color",
 # eg. "b" for blue, "k" for black, etc
-def plotGraph(graph, color):
+def plotGraph(graph, color, scale=1):
     ax = plt.axes()
 
     # Plotting all graph edges
     for node in graph.nodes:
         for out_edge in node.out_edges:
-            dx = out_edge.x - node.x
-            dy = out_edge.y - node.y
-            #ax.arrow(node.x, node.y, dx, dy, head_width=80, head_length=100, fc=color, ec=color)
-            ax.arrow(node.x, node.y, dx, dy, fc=color, ec=color)
+            dx = out_edge.x/scale - node.x/scale
+            dy = out_edge.y/scale - node.y/scale
+            #ax.arrow(node.x/scale, node.y/scale, dx, dy, head_width=80/scale, head_length=100/scale, fc=color, ec=color)
+            ax.arrow(node.x/scale, node.y/scale, dx, dy, fc=color, ec=color)

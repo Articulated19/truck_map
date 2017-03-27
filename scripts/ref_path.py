@@ -8,13 +8,13 @@ from PIL import Image
 from os.path import dirname, abspath
 import warnings
 import _tkinter
-import gc
 from math import sin, cos, radians
 
 
 IMG_PATH = "/map.png"
 GRAPH_PATH = "/graph.txt"
-SCALE = 10
+
+SCALE = 10  # Map img is in scale 1:10
 
 COLORS = ["r", "c", "m", "g", "y"]
 
@@ -32,9 +32,8 @@ class RefPath:
 
     def __init__(self):
         dirpath = dirname(abspath(__file__))
-        map_img = Image.open(dirpath + IMG_PATH)
 
-        self.map_img = map_img.resize((map_img.size[0]*SCALE, map_img.size[1]*SCALE), Image.ANTIALIAS)
+        self.map_img = Image.open(dirpath + IMG_PATH)
         self.graph = readFileToGraph(GRAPH_PATH)
         self.path = []
 
@@ -110,9 +109,9 @@ class RefPath:
     # Returns a reference path in the form of an array of tuples of (x, y)-coordinates
     def getRefPath(self, vehicle_state, pts=None):
         theta = vehicle_state.theta_1
-        vx, vy = vehicle_state.x, vehicle_state.y
-        dx = 300 * cos(radians(theta))
-        dy = -300 * sin(radians(theta))
+        vx, vy = vehicle_state.x / SCALE, vehicle_state.y / SCALE
+        dx = 300 / SCALE * cos(radians(theta))
+        dy = -300 / SCALE * sin(radians(theta))
 
         # Finding the Node (in valid direction) which is closest to the vehicle,
         # to use as a start point
@@ -144,12 +143,12 @@ class RefPath:
         # Displaying map image
         plt.imshow(self.map_img)
         # Plotting graph
-        plotGraph(self.graph, "b")
+        plotGraph(self.graph, "b", 10)
         # Plotting vehicle position and direction
         plt.plot(vx, vy, "ob", markersize=10)
-        self.ax.arrow(vx, vy, dx, dy, linewidth=2, head_width=100, head_length=120, fc="b", ec="b")
+        self.ax.arrow(vx, vy, dx, dy, linewidth=2, head_width=10, head_length=12, fc="b", ec="b")
         # Plotting start point
-        plt.plot(self.start_point.x, self.start_point.y, "or", markersize = 5)
+        plt.plot(self.start_point.x / SCALE, self.start_point.y / SCALE, "or", markersize = 5)
 
         self.key_handler = None
         self.valid = False
@@ -165,7 +164,7 @@ class RefPath:
             print "=====\n[] returned"
         else:
             print "=====\nPath returned"
-            #print "Path:", self.path
+            print "Path:", self.path
 
         return self.path
 
@@ -189,6 +188,8 @@ class RefPath:
                         self.pts = ginput(n=0, timeout=0, mouse_add=1, mouse_pop=3, mouse_stop=2)
                     except _tkinter.TclError:
                         return []
+                # Adjusting for SCALE
+                self.pts = map(lambda pt: (pt[0] * SCALE, pt[1] * SCALE), self.pts)
 
             # Adding 'start_point' first in 'pts'
             self.pts.insert(0, (self.start_point.x, self.start_point.y))
@@ -217,9 +218,9 @@ class RefPath:
             if self.valid:
 
                 # Plotting the path
-                xs = map(lambda x: x[0], self.partial_path)
-                ys = map(lambda x: x[1], self.partial_path)
-                self.path_plot = self.ax.plot(xs, ys, "-"+self.getColor(), linewidth=2.0)
+                xs = map(lambda x: x[0] / SCALE, self.partial_path)
+                ys = map(lambda x: x[1] / SCALE, self.partial_path)
+                self.path_plot = self.ax.plot(xs, ys, "-"+self.getColor(), linewidth=3.0)
                 self.key_handler = self.fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
                 print "=====\nPress 'Enter' to keep the path, 'a' to add to the path, 'Backspace' to discard"
                 plt.show()
@@ -228,9 +229,6 @@ class RefPath:
 # Main, used for testing
 if __name__ == "__main__":
     refpath_obj = RefPath()
-    vehicle_state = VehicleState(2770, 1430, -90)
+    vehicle_state = VehicleState(4000, 1630, -90)
     
     path = refpath_obj.getRefPath(vehicle_state)
-
-    del refpath_obj
-    gc.collect()    

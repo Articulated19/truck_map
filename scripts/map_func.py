@@ -9,7 +9,8 @@ from math import ceil
 
 
 IMG_PATH = "/map.png"
-SCALE = 10  # For scale 1:10
+
+SCALE = 10  # Map img is in scale 1:10
 
 
 # For representing an obstacle on the track
@@ -22,21 +23,21 @@ class Obstacle:
         self.height = height
         self.padding = padding
 
-        self.text_x = self.x + self.width + 100
-        self.text_y = self.y - self.height
+        self.text_x = (self.x + self.width + 100) / SCALE
+        self.text_y = (self.y - self.height) / SCALE
 
         self.activated_patch = patches.Rectangle(
-                (self.x, self.y),  # Lower left corner
-                self.width,
-                -self.height,
+                (self.x / SCALE, self.y / SCALE),  # Lower left corner
+                self.width / SCALE,
+                -self.height / SCALE,
                 fc="r", ec="0.5",
                 linewidth=padding/10
             )
 
         self.deactivated_patch = patches.Rectangle(
-                (self.x, self.y),  # Lower left corner
-                self.width,
-                -self.height,
+                (self.x / SCALE, self.y / SCALE),  # Lower left corner
+                self.width / SCALE,
+                -self.height / SCALE,
                 fc="b", ec="0.5",
                 linewidth=padding/10
             )
