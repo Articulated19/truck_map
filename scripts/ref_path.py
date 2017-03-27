@@ -210,6 +210,7 @@ class RefPath:
                 # setting 'valid' to False to let user retry
                 else:
                     self.valid = False
+                    self.pts = None
                     print "=====\nA path could not be created, please input new points"
                     break
 
@@ -220,6 +221,7 @@ class RefPath:
                 # Plotting the path
                 xs = map(lambda x: x[0] / SCALE, self.partial_path)
                 ys = map(lambda x: x[1] / SCALE, self.partial_path)
+                color = self.getColor()
                 self.path_plot = self.ax.plot(xs, ys, "-"+self.getColor(), linewidth=3.0)
                 self.key_handler = self.fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
                 print "=====\nPress 'Enter' to keep the path, 'a' to add to the path, 'Backspace' to discard"

@@ -3,6 +3,7 @@ from os.path import dirname, abspath
 from math import sqrt, radians
 from enum import Enum
 import matplotlib.pyplot as plt
+import gc
 
 
 # For representing a Point in a coordinate system
@@ -526,6 +527,13 @@ def getClosestY(nodes, point):
 
 
 Direction = Enum("Direction", "up down left right")
+""" If we don't want to use Enum
+class Direction:
+    up = "up"
+    down = "down"
+    left = "left"
+    right = "right"
+"""
 
 
 # Takes an array of Node objects, a Point object and a Direction
