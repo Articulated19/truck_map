@@ -348,33 +348,41 @@ def shortestPath(graph, start, end):
     # Finding start and end Node:
     # (the Nodes which are closest to start resp. end point)
 
-    # Start:
-    # Selecting all Nodes which are in range from the start point
-    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, start, search_range), start, search_range)
-    # Returning None if No Node is in range
-    if not nodes:
-        return None
-    # Finding the two Nodes which are closest to the start point, x-wise resp. y-wise
-    closest_x = getClosestX(nodes, start)
-    closest_y = getClosestY(nodes, start)
-    # Selecting the Node which is closest to the start point
-    dx = Node(start.x, start.y).getEdgeLength(closest_x)
-    dy = Node(start.x, start.y).getEdgeLength(closest_y)
-    start_node = closest_x if dx <= dy else closest_y
+    start_node = graph.getNode(start.x, start.y)
 
-    # End:
-    # Selecting all Nodes which are in range from the end point
-    nodes = getAllInRangeX(getAllInRangeY(graph.nodes, end, search_range), end, search_range)
-    # Returning None if No Node is in range
-    if not nodes:
-        return None
-    # Finding the two Nodes which are closest to the end point, x-wise resp. y-wise
-    closest_x = getClosestX(nodes, end)
-    closest_y = getClosestY(nodes, end)
-    # Selecting the Node which is closest to the end point
-    dx = Node(end.x, end.y).getEdgeLength(closest_x)
-    dy = Node(end.x, end.y).getEdgeLength(closest_y)
-    end_node = closest_x if dx <= dy else closest_y
+    # If the coordinates for the start point does Not exactly match a Node in the graph
+    if not start_node:
+
+        # Selecting all Nodes which are in range from the start point
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, start, search_range), start, search_range)
+        # Returning None if No Node is in range
+        if not nodes:
+            return None
+        # Finding the two Nodes which are closest to the start point, x-wise resp. y-wise
+        closest_x = getClosestX(nodes, start)
+        closest_y = getClosestY(nodes, start)
+        # Selecting the Node which is closest to the start point
+        dx = Node(start.x, start.y).getEdgeLength(closest_x)
+        dy = Node(start.x, start.y).getEdgeLength(closest_y)
+        start_node = closest_x if dx <= dy else closest_y
+
+    end_node = graph.getNode(end.x, end.y)
+
+    # If the coordinates for the end point does Not exactly match a Node in the graph
+    if not end_node:
+
+        # Selecting all Nodes which are in range from the end point
+        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, end, search_range), end, search_range)
+        # Returning None if No Node is in range
+        if not nodes:
+            return None
+        # Finding the two Nodes which are closest to the end point, x-wise resp. y-wise
+        closest_x = getClosestX(nodes, end)
+        closest_y = getClosestY(nodes, end)
+        # Selecting the Node which is closest to the end point
+        dx = Node(end.x, end.y).getEdgeLength(closest_x)
+        dy = Node(end.x, end.y).getEdgeLength(closest_y)
+        end_node = closest_x if dx <= dy else closest_y
 
     return findShortestPath(graph, start_node, end_node)
 

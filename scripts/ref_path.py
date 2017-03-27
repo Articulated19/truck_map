@@ -76,9 +76,9 @@ class RefPath:
 
         # 'a' or 'A' (adding to path)
         elif event.key == "a" or event.key == "A":
-            last = self.pts[len(self.pts)-1]
+            last = self.partial_path[-1]
             self.start_point = Point(last[0], last[1])
-            print "Select points to add to the path"
+            print "=====\nSelect points to add to the path"
             
             self.valid = False
             self.pts = None
@@ -197,14 +197,14 @@ class RefPath:
             # If at least one point was inputted
             if len(self.pts) > 1:
                 self.valid = True
-                start = self.pts[0]
+                start = self.start_point
 
             # Calculating shortest path between the points
             for point in self.pts[1:]:
-                path = shortestPath(self.graph, Point(start[0], start[1]), Point(point[0], point[1]))
+                path = shortestPath(self.graph, start, Point(point[0], point[1]))
                 if path != None:
                     self.partial_path += path
-                    start = point
+                    start = Point(self.partial_path[-1][0], self.partial_path[-1][1])
 
                 # If the given points were not in range of any Nodes,
                 # setting 'valid' to False to let user retry

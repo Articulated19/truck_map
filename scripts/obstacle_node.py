@@ -52,7 +52,6 @@ class ObstacleHandler:
                 self.map.removeObstacle(index)
                 print "Obstacle '%s' was deactivated" % (index+1)
                 self.pub.publish(index)
-                #rospy.loginfo("Published on topic '%s'", PUBLISH_TOPIC)
 
                 # Updating obstacle plot
                 obstacle.plot.remove()
@@ -113,7 +112,7 @@ class ObstacleHandler:
                                              verticalalignment="top", color="blue", fontweight="bold")
 
         print ("=====\nRed obstacles are activated, Blue obstacles are deactivated\n" +
-               "Press the corresponding number key, to activate/deactivate an obstacle\n")
+               "Press the corresponding number key, to activate/deactivate an obstacle\n=====")
 
         fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
 
