@@ -14,11 +14,11 @@ IMG_PATH = '/map.png'
 
 class ObstacleHandler:
 
-    def __init__(self, map_obj):
+    def __init__(self):
         dirpath = dirname(abspath(__file__))
 
         self.map_img = Image.open(dirpath + IMG_PATH)
-        self.map = map_obj
+        self.map = Map()
 
         # For plotting
         self.ax = None
@@ -119,8 +119,7 @@ class ObstacleHandler:
 
 if __name__ == '__main__':
     rospy.init_node('obstacles', anonymous=True)
-    map_obj = Map()
-    handler_obj = ObstacleHandler(map_obj)
+    handler_obj = ObstacleHandler()
 
     try:
         handler_obj.handleObstacles()
