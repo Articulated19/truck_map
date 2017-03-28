@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 from os.path import dirname, abspath
-from math import sqrt, radians
+from math import sqrt, radians, degrees
 from enum import Enum
 import matplotlib.pyplot as plt
 import gc
+
+
+SCALE = 10  # Savefile is in mm, and Graph in cm
 
 
 # For representing a Point in a coordinate system
@@ -140,7 +143,7 @@ class Node:
         self.out_edges = out_edges if out_edges else []
 
         # For use in shortestpath()
-        self.distance = float("inf")
+        self.distance = float('inf')
         self.visited = False
         self.in_edges = []
 
@@ -191,6 +194,9 @@ class Node:
 # Takes a path (relative to current directory) to a text file containing a Graph representation
 # The textfile should be in the format specified in 'example_graph.txt'
 #
+# Textfile is assumed to store Graph in mm
+# The Graph returned by this function is in cm
+#
 # If parsing was completed without syntax errors:
 #     Returns a Graph object with all nodes in its nodelist
 # Otherwise:
@@ -206,16 +212,16 @@ def readFileToGraph(path):
     valid = False
 
     # Opening the file, parsing the lines one by one
-    with open(dirpath + path, "r") as file:
+    with open(dirpath + path, 'r') as file:
         for line in file:
             # Line counter, for debugging of input file
             line_counter += 1
             # Removing whitespaces and tabs
-            line = line.replace(" ", "")
-            line = line.replace("\t", "")
+            line = line.replace(' ', '')
+            line = line.replace('\t', '')
 
             # Ignoring comments and empty lines
-            if not line.startswith("#") and not line.startswith("\n"):
+            if not line.startswith('#') and not line.startswith('\n'):
 
                 # Start of node declaration
                 if line == "NODE\n":
@@ -241,18 +247,18 @@ def readFileToGraph(path):
                     # Validating syntax
                     if begin:
                         # Removing newline characters and splitting line on list separator ';'
-                        array = line.replace("\n", "").split(";")
+                        array = line.replace('\n', '').split(';')
 
                         # Out-edges
                         if current_node:
                             for elem in array:
-                                elem = elem.split(",")
+                                elem = elem.split(',')
                                 valid = True if len(elem) == 2 and elem[0].isdigit() and elem[1].isdigit() else False
                                 # Break on Syntax error
                                 if not valid:
                                     break
 
-                                (x, y) = (int(elem[0]), int(elem[1]))
+                                (x, y) = (float(elem[0]) / SCALE, float(elem[1]) / SCALE)
                                 # If the connected Node is not already in the node-list, create a new Node object for it
                                 outedge = graph.getNode(x, y)
                                 if not outedge:
@@ -262,13 +268,13 @@ def readFileToGraph(path):
 
                         # Current Node
                         elif len(array) == 1:
-                            elem = array[0].split(",")
+                            elem = array[0].split(',')
                             valid = True if len(elem) == 2 and elem[1].isdigit() else False
                             # Break on Syntax error
                             if not valid:
                                 break
 
-                            (x, y) = (int(elem[0]), int(elem[1]))
+                            (x, y) = (float(elem[0]) / SCALE, float(elem[1]) / SCALE)
                             # If the current Node is not already in the node-list, create a new Node object for it
                             current_node = graph.getNode(x, y)
                             if not current_node:
@@ -295,32 +301,62 @@ def readFileToGraph(path):
 # Takes a Graph and a filename
 # Stores the Graph data in a file with given filename,
 # in a format that can be re-read by using 'readFileToGraph(path_to_savefile)'
+#
+# Given Graph is assumed to be in cm
+# The textfile created by this function stores Graph in mm
 def saveGraphToFile(graph, filename):
-    with open(filename, "w") as file:
+    with open(filename, 'w') as file:
 
         for node in graph.nodes:
             file.write("NODE\n")
-            file.write("    %s,%s\n" % (node.x, node.y))
+            file.write("    %s,%s\n" % (int(node.x * SCALE), int(node.y * SCALE)))
 
             for out_edge in node.out_edges[:1]:
-                file.write("    %s,%s" % (out_edge.x, out_edge.y))
+                file.write("    %s,%s" % (int(out_edge.x * SCALE), int(out_edge.y * SCALE)))
             for out_edge in node.out_edges[1:]:
-                file.write(" ; %s,%s" % (out_edge.x, out_edge.y))
+                file.write(" ; %s,%s" % (int(out_edge.x * SCALE), int(out_edge.y * SCALE)))
 
             if node.out_edges:
-                file.write("\n")
+                file.write('\n')
             file.write("ENDNODE\n\n")
 
 
 # Takes an array of Point objects
 #
+# Given points are assumed to be in mm
+# The Graph returned by this function is in cm
+#
 # Returns a Directed Graph, with an edge from each Point to the next one in the array
-def pointsToGraph(points):
+def pointsToGraphMM(points):
+    # Converting to cm
+    pts = map(lambda p: Point(float(p.x) / SCALE, float(p.y) / SCALE), points)
+    graph = Graph()
+
+    # Creating Node objects for all points
+    for point in pts:
+        graph.addNode(Node(point.x, point.y))
+    
+    # Creating an edge from each Node to the next one in the array
+    for i in range(len(pts)-1):
+        current_node = graph.getNode(pts[i].x, pts[i].y)
+        next_node = graph.getNode(pts[i+1].x, pts[i+1].y)
+        current_node.addOutEdge(next_node)
+
+    return graph
+
+
+# Takes an array of Point objects
+#
+# Given points are assumed to be in cm
+# The Graph returned by this function is in cm
+#
+# Returns a Directed Graph, with an edge from each Point to the next one in the array
+def pointsToGraphCM(points):
     graph = Graph()
 
     # Creating Node objects for all points
     for point in points:
-        graph.addNode(Node(point.x, point.y))
+        graph.addNode(Node(float(point.x), float(point.y)))
     
     # Creating an edge from each Node to the next one in the array
     for i in range(len(points)-1):
@@ -340,7 +376,7 @@ def pointsToGraph(points):
 def shortestPath(graph, start, end):
 
     # Used to specify search range for finding closest point
-    search_range = 200
+    search_range = 20
 
     start_node = None
     end_node = None
@@ -418,7 +454,7 @@ def findShortestPath(graph, start_node, end_node):
 
         # Checking if there are any more Nodes that can be visited,
         # returning None if there aren't any (since that means that the end Node can't be reached)
-        if current_node.distance == float("inf"):
+        if current_node.distance == float('inf'):
             return None
 
         # Going through all unvisited out-edges from 'current_node'
@@ -442,7 +478,7 @@ def findShortestPath(graph, start_node, end_node):
 
         # Selecting the unvisited Node that has the smallest 'distance' as the new 'current_node'
         smallest_node = None
-        smallest_distance = float("inf")
+        smallest_distance = float('inf')
         for node in unvisited_set.nodes:
             if node.distance < smallest_distance:
                 smallest_node = node
@@ -501,7 +537,7 @@ def getAllInRangeY(nodes, point, range_above, range_below=None):
 # Returns the Node that is (x-wise) closest to given Point
 def getClosestX(nodes, point):
     closest_node = None
-    closest_dist = float("inf")
+    closest_dist = float('inf')
 
     for node in nodes:
         dist = abs(point.x - node.x)
@@ -520,7 +556,7 @@ def getClosestX(nodes, point):
 # Returns the Node that is (y-wise) closest to given Point
 def getClosestY(nodes, point):
     closest_node = None
-    closest_dist = float("inf")
+    closest_dist = float('inf')
     
     for node in nodes:
         dist = abs(point.y - node.y)
@@ -534,7 +570,7 @@ def getClosestY(nodes, point):
     return closest_node
 
 
-Direction = Enum("Direction", "up down left right")
+Direction = Enum('Direction', 'up down left right')
 """ If we don't want to use Enum
 class Direction:
     up = "up"
@@ -567,7 +603,7 @@ def hasOutEdgeInRightDir(node, direction):
 
     # Used to specify minimum difference between given Node and an out-edge-node,
     # (x-wise resp. y-wise) for the edge to be considered as going in a specific Direction
-    min_offset = 50
+    min_offset = 5
 
     # Going through all out-edges,
     # returning True as soon as we find one that goes in the given Direction
@@ -606,16 +642,16 @@ def hasOutEdgeInRightDir(node, direction):
 def getClosestToVehicle(graph, vehicle_state):
 
     # Used to specify search range for finding closest point
-    search_range = 1000
+    search_range = 100
 
     pos = Point(vehicle_state.x, vehicle_state.y)
     start_node = None
 
     # Normalizing theta
-    theta = vehicle_state.theta_1 % 360
+    theta = degrees(vehicle_state.theta1) % 360
 
     # Vehicle angle: bottom-to-top
-    if theta > 45 and theta <= 135:
+    if theta > 225 and theta <= 315:
         # Selecting all Nodes which are in range from the vehicle
         nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range, 0), pos, search_range)
         # Selecting all Nodes which have an out-edge upwards from vehicle position
@@ -629,7 +665,7 @@ def getClosestToVehicle(graph, vehicle_state):
         nodes = getAllInRightDir(nodes, pos, Direction.left)
 
     # Vehicle angle: top-to-bottom
-    elif theta > 225 and theta <= 315:
+    elif theta > 45 and theta <= 135:
         # Selecting all Nodes which are in range from the vehicle
         nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, 0, search_range), pos, search_range)
         # Selecting all Nodes which have an out-edge downwards from vehicle position
@@ -658,8 +694,7 @@ def getClosestToVehicle(graph, vehicle_state):
 
 
 # For plotting a Graph
-# Parameter 'color' should be in format "color",
-# eg. "b" for blue, "k" for black, etc
+# Parameter 'color' should be in format: 'b' for blue, 'k' for black, etc
 def plotGraph(graph, color, scale=1):
     ax = plt.axes()
 

@@ -21,6 +21,7 @@ It can then serve as backup if the svaefile should be lost, or be used to edit t
 
 """
 
+SCALE = 10
 
 ARC_DIST = 100
 LIN_DIST = 200
@@ -140,14 +141,14 @@ def makeGraph():
     p222_.append(Point(3253, 6850))
 
 
-    gs = [pointsToGraph(p1_), pointsToGraph(p2_), pointsToGraph(p3_), pointsToGraph(p4_), pointsToGraph(p5_),
-          pointsToGraph(p6_), pointsToGraph(p7_), pointsToGraph(p8_), pointsToGraph(p9_), pointsToGraph(p10_),
-          pointsToGraph(p11_), pointsToGraph(p12_), pointsToGraph(p13_), pointsToGraph(p14_), pointsToGraph(p15_),
-          pointsToGraph(p16_), pointsToGraph(p17_), pointsToGraph(p18_), pointsToGraph(p191_), pointsToGraph(p192_),
-          pointsToGraph(p201_), pointsToGraph(p202_), pointsToGraph(p211_), pointsToGraph(p212_), pointsToGraph(p213_),
-          pointsToGraph(p221_), pointsToGraph(p222_), pointsToGraph(p223_), pointsToGraph(p23_), pointsToGraph(p24_),
-          pointsToGraph(p251_), pointsToGraph(p252_), pointsToGraph(p26_), pointsToGraph(p27_), pointsToGraph(p28_),
-          pointsToGraph(p291_), pointsToGraph(p292_), pointsToGraph(p30_)]
+    gs = [pointsToGraphMM(p1_), pointsToGraphMM(p2_), pointsToGraphMM(p3_), pointsToGraphMM(p4_), pointsToGraphMM(p5_),
+          pointsToGraphMM(p6_), pointsToGraphMM(p7_), pointsToGraphMM(p8_), pointsToGraphMM(p9_), pointsToGraphMM(p10_),
+          pointsToGraphMM(p11_), pointsToGraphMM(p12_), pointsToGraphMM(p13_), pointsToGraphMM(p14_), pointsToGraphMM(p15_),
+          pointsToGraphMM(p16_), pointsToGraphMM(p17_), pointsToGraphMM(p18_), pointsToGraphMM(p191_), pointsToGraphMM(p192_),
+          pointsToGraphMM(p201_), pointsToGraphMM(p202_), pointsToGraphMM(p211_), pointsToGraphMM(p212_), pointsToGraphMM(p213_),
+          pointsToGraphMM(p221_), pointsToGraphMM(p222_), pointsToGraphMM(p223_), pointsToGraphMM(p23_), pointsToGraphMM(p24_),
+          pointsToGraphMM(p251_), pointsToGraphMM(p252_), pointsToGraphMM(p26_), pointsToGraphMM(p27_), pointsToGraphMM(p28_),
+          pointsToGraphMM(p291_), pointsToGraphMM(p292_), pointsToGraphMM(p30_)]
 
 
     graph = Graph()

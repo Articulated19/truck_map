@@ -8,12 +8,14 @@ from os.path import dirname, abspath
 from math import ceil
 
 
-IMG_PATH = "/map.png"
+IMG_PATH = '/map.png'
 
 SCALE = 10  # Map img is in scale 1:10
 
 
 # For representing an obstacle on the track
+#
+# All measurements (including coordinates) are in cm
 class Obstacle:
 
     def __init__(self, x, y, width, height, padding):
@@ -23,38 +25,40 @@ class Obstacle:
         self.height = height
         self.padding = padding
 
-        self.text_x = (self.x + self.width + 100) / SCALE
-        self.text_y = (self.y - self.height) / SCALE
-
-        self.activated_patch = patches.Rectangle(
-                (self.x / SCALE, self.y / SCALE),  # Lower left corner
-                self.width / SCALE,
-                -self.height / SCALE,
-                fc="r", ec="0.5",
-                linewidth=padding/10
-            )
-
-        self.deactivated_patch = patches.Rectangle(
-                (self.x / SCALE, self.y / SCALE),  # Lower left corner
-                self.width / SCALE,
-                -self.height / SCALE,
-                fc="b", ec="0.5",
-                linewidth=padding/10
-            )
-
         self.matrix_backup = []
 
         # For handling user input
         self.active = False
         self.plot = None
         self.text = None
+        
+        # For plotting with matplotlib
+        self.text_x = (self.x + self.width + 10)
+        self.text_y = (self.y - self.height)
+
+        self.activated_patch = patches.Rectangle(
+                (self.x, self.y),  # Lower left corner
+                self.width,
+                -self.height,
+                fc='r', ec='0.5',
+                linewidth=padding
+            )
+
+        self.deactivated_patch = patches.Rectangle(
+                (self.x, self.y),  # Lower left corner
+                self.width,
+                -self.height,
+                fc='b', ec='0.5',
+                linewidth=padding
+            )
 
 
+# All measurements (including coordinates) are in cm
 OBSTACLES = [
-        Obstacle(1780, 3750, 200, 110, 20),
-        Obstacle(2020, 4360, 140, 120, 20),
-        Obstacle(1470, 6860, 400, 80, 10),
-        Obstacle(2880, 8440, 100, 150, 30)
+        Obstacle(178, 375, 20, 11, 2),
+        Obstacle(202, 436, 14, 12, 2),
+        Obstacle(147, 686, 40, 8, 1),
+        Obstacle(288, 844, 10, 15, 3)
     ]
 
 
@@ -90,17 +94,17 @@ class Map:
         if obstacle.active:
             return False
 
-        height = ceil(float(obstacle.height)/float(self.scale))
-        width = ceil(float(obstacle.width)/float(self.scale))
-        padding = ceil(float(obstacle.padding)/float(self.scale))
-        (x, y) = (int(obstacle.x/self.scale), int(obstacle.y/self.scale))
+        height = int(ceil(obstacle.height))
+        width = int(ceil(obstacle.width))
+        padding = int(ceil(obstacle.padding))
+        (x, y) = (int(obstacle.x), int(obstacle.y))
 
         # Going through all rows in the matrix
-        for i in range(int(height)):
+        for i in range(height):
             row = []
 
             # Going through all elements on each row
-            for j in range(int(width)):
+            for j in range(width):
 
                 # For storing the old element value in 'matrix_backup' of given obstacle
                 row.insert(j, self.matrix[y-i][x+j])
@@ -138,31 +142,34 @@ class Map:
 
         # If given obstacle is Not active, there is no need to reset the matrix
         if not obstacle.active:
-            return
+            return False
 
-        height = ceil(float(obstacle.height)/float(self.scale))
-        width = ceil(float(obstacle.width)/float(self.scale))
-        padding = ceil(float(obstacle.padding)/float(self.scale))
-        (x, y) = (int(obstacle.x/self.scale), int(obstacle.y/self.scale))
+        height = int(ceil(obstacle.height))
+        width = int(ceil(obstacle.width))
+        padding = int(ceil(obstacle.padding))
+        (x, y) = (int(obstacle.x), int(obstacle.y))
 
 
         # Using 'matrix_backup' of given obstacle to remove the obstacle
         # and reset the affected section of the matrix:
 
         # Going through all rows in the matrix
-        for i in range(int(height)):
+        for i in range(height):
             row = []
 
             # Going through all elements on each row
-            for j in range(int(width)):
+            for j in range(width):
                 self.matrix[y-i][x+j] = obstacle.matrix_backup[i][j]
 
         # Clearing 'backup' of given obstacle
         obstacle.matrix_backup = []
         obstacle.active = False
+        return True
 
 
     # Takes (x, y)-coordinates for an element
+    #
+    # Coordinates are assumed to be in cm
     #
     # If given coordinates are valid for the given matrix:
     #     Returns the value of element at given index,
@@ -170,7 +177,7 @@ class Map:
     # If given coordinates are out of bounds:
     #     Returns None 
     def getValue(self, x, y):
-        (ix, iy) = (int(x/self.scale), int(y/self.scale))
+        (ix, iy) = (int(x), int(y))
         try:
             return self.matrix[iy][ix]
         except IndexError:

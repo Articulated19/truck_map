@@ -8,10 +8,8 @@ from os.path import dirname, abspath
 from PIL import Image
 
 
-PUBLISH_TOPIC = "map_updated"
-IMG_PATH = "/map.png"
-
-SCALE = 10  # Map img is in scale 1:10
+PUBLISH_TOPIC = 'map_updated'
+IMG_PATH = '/map.png'
 
 
 class ObstacleHandler:
@@ -22,7 +20,7 @@ class ObstacleHandler:
         self.map_img = Image.open(dirpath + IMG_PATH)
         self.map = map_obj
 
-        # To handle user input
+        # For plotting
         self.ax = None
 
         # Ros topic
@@ -33,7 +31,7 @@ class ObstacleHandler:
     # Handler for 'key_press_event'
     def onKeyPress(self, event):
         if event.key.isdigit():
-            if event.key == "0":
+            if event.key == '0':
                 index = 9
             else:
                 index = int(event.key)-1
@@ -50,31 +48,32 @@ class ObstacleHandler:
             if obstacle.active:
                 # Removing obstacle from the map matrix
                 self.map.removeObstacle(index)
-                print "Obstacle '%s' was deactivated" % (index+1)
+                print "=====\nObstacle '%s' was deactivated" % (index+1)
                 self.pub.publish(index)
+                rospy.loginfo("Published '%s' on topic '%s'", index, PUBLISH_TOPIC)
 
                 # Updating obstacle plot
                 obstacle.plot.remove()
                 obstacle.text.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.deactivated_patch)
                 obstacle.text = self.ax.text(obstacle.text_x, obstacle.text_y, str(index+1),
-                                             verticalalignment="top", color="blue", fontweight="bold")
+                                             verticalalignment='top', color='blue', fontweight='bold')
                 plt.draw()
 
             # If the obstacle is inactive: Activating it
             else:
                 # Adding obstacle to the map matrix
                 self.map.addObstacle(index)
-                print "Obstacle '%s' was activated" % (index+1)
+                print "=====\nObstacle '%s' was activated" % (index+1)
                 self.pub.publish(index)
-                #rospy.loginfo("Published on topic '%s'", PUBLISH_TOPIC)
+                rospy.loginfo("Published '%s' on topic '%s'", index, PUBLISH_TOPIC)
 
                 # Updating obstacle plot
                 obstacle.plot.remove()
                 obstacle.text.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.activated_patch)
                 obstacle.text = self.ax.text(obstacle.text_x, obstacle.text_y, str(index+1),
-                                             verticalalignment="top", color="red", fontweight="bold")
+                                             verticalalignment='top', color='red', fontweight='bold')
                 plt.draw()
 
 
@@ -87,12 +86,12 @@ class ObstacleHandler:
         self.ax = plt.axes()
 
         # Graph settings
-        plt.axis("scaled")
+        plt.axis('scaled')
         plt.xlim( (0, xlim) )
         plt.ylim( (ylim, 0) )
-        plt.xlabel("x-axis")
-        plt.ylabel("y-axis")
-        plt.title("handleObstacles()")
+        plt.xlabel('-axis')
+        plt.ylabel('y-axis')
+        plt.title('handleObstacles()')
 
         # Displaying map image
         img_plot = plt.imshow(self.map_img)
@@ -103,24 +102,23 @@ class ObstacleHandler:
                     obstacle.plot.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.activated_patch)
                 obstacle.text = self.ax.text(obstacle.text_x, obstacle.text_y, str(i+1),
-                                             verticalalignment="top", color="red", fontweight="bold")
+                                             verticalalignment='top', color='red', fontweight='bold')
             else:
                 if obstacle.plot:
                     obstacle.plot.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.deactivated_patch)
                 obstacle.text = self.ax.text(obstacle.text_x, obstacle.text_y, str(i+1),
-                                             verticalalignment="top", color="blue", fontweight="bold")
+                                             verticalalignment='top', color='blue', fontweight='bold')
 
         print ("=====\nRed obstacles are activated, Blue obstacles are deactivated\n" +
-               "Press the corresponding number key, to activate/deactivate an obstacle\n=====")
+               "Press the corresponding number key, to activate/deactivate an obstacle")
 
-        fig.canvas.mpl_connect("key_press_event", self.onKeyPress)
-
+        fig.canvas.mpl_connect('key_press_event', self.onKeyPress)
         plt.show()
 
 
-if __name__ == "__main__":
-    rospy.init_node("obstacles", anonymous=True)
+if __name__ == '__main__':
+    rospy.init_node('obstacles', anonymous=True)
     map_obj = Map()
     handler_obj = ObstacleHandler(map_obj)
 
