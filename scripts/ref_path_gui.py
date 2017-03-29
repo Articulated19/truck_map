@@ -194,20 +194,23 @@ class RefPath:
                 self.valid = True
                 start = self.start_point
 
-            # Calculating shortest path between the points
-            for point in self.pts[1:]:
-                path = shortestPath(self.graph, start, Point(point[0], point[1]))
-                if path != None:
-                    self.partial_path += path
-                    start = Point(self.partial_path[-1][0], self.partial_path[-1][1])
+                # Adding start point to path
+                self.partial_path.append((start.x, start.y))
 
-                # If the given points were not in range of any Nodes,
-                # setting 'valid' to False to let user retry
-                else:
-                    self.valid = False
-                    self.pts = None
-                    print "=====\nA path could not be created, please input new points"
-                    break
+                # Calculating shortest path between the points
+                for point in self.pts[1:]:
+                    path = shortestPath(self.graph, start, Point(point[0], point[1]))
+                    if path != None:
+                        self.partial_path += path[1:]
+                        start = Point(self.partial_path[-1][0], self.partial_path[-1][1])
+
+                    # If the given points were not in range of any Nodes,
+                    # setting 'valid' to False to let user retry
+                    else:
+                        self.valid = False
+                        self.pts = None
+                        print "=====\nA path could not be created, please input new points"
+                        break
 
             # If a valid path was created,
             # letting user decide whether to keep or discard the path

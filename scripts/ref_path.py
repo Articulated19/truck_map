@@ -49,12 +49,14 @@ class RefPath:
 
         # If at least one coordinate point was given
         if len(pts) > 1:
+            # Adding start point to path
+            self.path.append((start_point.x, start_point.y))
 
             # Calculating shortest path between the points
             for point in pts[1:]:
                 path = shortestPath(self.graph, start_point, Point(point[0], point[1]))
                 if path != None:
-                    self.path += path
+                    self.path += path[1:]
                     start_point = Point(self.path[-1][0], self.path[-1][1])
 
                 # If the given coordinate points were not in range of any Nodes
@@ -76,7 +78,7 @@ class RefPath:
 # Main, used for testing
 if __name__ == '__main__':
 
-    COORDS_VALID = [
+    COORDS_VALID_ = [
         (255.0520833333332, 339.2578125000000),
         (317.8776041666666, 716.210937),
         (260.078125, 856.9401041666667)
@@ -112,4 +114,3 @@ if __name__ == '__main__':
     plt.plot(xs, ys, '-r', linewidth=3.0)
 
     plt.show()
-    
