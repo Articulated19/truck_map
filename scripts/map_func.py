@@ -55,10 +55,10 @@ class Obstacle:
 
 # All measurements (including coordinates) are in cm
 OBSTACLES = [
-        Obstacle(178, 375, 20, 11, 2),
-        Obstacle(202, 436, 14, 12, 2),
-        Obstacle(147, 686, 40, 8, 1),
-        Obstacle(288, 844, 10, 15, 3)
+        Obstacle(178, 375, 20, 31, 2),
+        Obstacle(202, 436, 14, 22, 2),
+        Obstacle(147, 686, 40, 28, 1),
+        Obstacle(288, 844, 40, 35, 3)
     ]
 
 
