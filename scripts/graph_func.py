@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from os.path import dirname, abspath
-from math import sqrt, radians, degrees
+from math import sqrt, radians, degrees, ceil
 from enum import Enum
 import matplotlib.pyplot as plt
 
@@ -27,18 +27,20 @@ class Point:
 # For representing a Directed Graph
 class Graph:
 
-    # Takes an array of Node objects, which make up the Graph (optional)
+    # Takes a Dictionary of Node objects, which make up the Graph (optional)
     def __init__(self, nodes=None):
-        self.nodes = nodes if nodes else []
+        self.nodes = nodes if nodes else dict()
 
 
     # String representation of a Graph object
     def __str__(self):
         to_str = ""
-        for node in self.nodes[:-1]:
-            to_str += "%s\n" % (node)
-        if len(self.nodes) > 0:
-            to_str += "%s" % (self.nodes[-1])
+        nodes = self.nodes.values()
+
+        for node in nodes[:-1]:
+            to_str += "%s\n" % node
+        if len(nodes) > 0:
+            to_str += "%s" % nodes[-1]
         return to_str
 
 
@@ -58,7 +60,7 @@ class Graph:
                 self.addNode(e)
                 current_node.addOutEdge(e)
         else:
-            self.nodes.append(node)
+            self.nodes[(node.x, node.y)] = node
 
 
     # Takes (x, y)-coordinates for a Node
@@ -68,17 +70,12 @@ class Graph:
     # Otherwise:
     #     Reurns None 
     def getNode(self, x, y):
-        for node in self.nodes:
-            if node == Node(x, y):
-                # Node object found
-                return node
-        # Node object Not found
-        return None
+        return self.nodes.get((x, y))
 
 
     # For resetting the parameters used in shortestPath()
     def resetGraph(self):
-        for node in self.nodes:
+        for node in self.nodes.values():
             node.distance = INF
             node.visited = False
 
@@ -255,18 +252,18 @@ def readFileToGraph(path):
 # in a format that can be re-read by using 'readFileToGraph(path_to_savefile)'
 #
 # Given Graph is assumed to be in cm
-# The textfile created by this function stores Graph in mm
+# The textfile created by this function stores the Graph in mm, with one decimal's accuracy and rounded up
 def saveGraphToFile(graph, filename):
     with open(filename, 'w') as file:
 
-        for node in graph.nodes:
+        for node in graph.nodes.values():
             file.write("NODE\n")
-            file.write("    %s,%s\n" % (int(node.x * SCALE), int(node.y * SCALE)))
+            file.write("    %s,%s\n" % (int(ceil(node.x * SCALE)), int(ceil(node.y * SCALE))))
 
             for out_edge in node.out_edges[:1]:
-                file.write("    %s,%s" % (int(out_edge.x * SCALE), int(out_edge.y * SCALE)))
+                file.write("    %s,%s" % (int(ceil(out_edge.x * SCALE)), int(ceil(out_edge.y * SCALE))))
             for out_edge in node.out_edges[1:]:
-                file.write(" ; %s,%s" % (int(out_edge.x * SCALE), int(out_edge.y * SCALE)))
+                file.write(" ; %s,%s" % (int(ceil(out_edge.x * SCALE)), int(ceil(out_edge.y * SCALE))))
 
             if node.out_edges:
                 file.write('\n')
@@ -329,9 +326,7 @@ def shortestPath(graph, start, end):
 
     # Used to specify search range for finding closest point
     search_range = 20
-
-    start_node = None
-    end_node = None
+    nodes = graph.nodes.values()
 
     # Finding start resp. end Node:
 
@@ -341,7 +336,7 @@ def shortestPath(graph, start, end):
     if not start_node:
 
         # Selecting all Nodes which are in range from the start point
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, start, search_range), start, search_range)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, start, search_range), start, search_range)
         # Returning None if No Node is in range
         if not nodes:
             return None
@@ -359,7 +354,7 @@ def shortestPath(graph, start, end):
     if not end_node:
 
         # Selecting all Nodes which are in range from the end point
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, end, search_range), end, search_range)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, end, search_range), end, search_range)
         # Returning None if No Node is in range
         if not nodes:
             return None
@@ -420,7 +415,7 @@ def findShortestPath(graph, start_node, end_node):
         # Selecting the unvisited Node that has the smallest 'distance' as the new 'current_node'
         smallest_node = None
         smallest_distance = INF
-        for node in graph.nodes:
+        for node in graph.nodes.values():
             if not node.visited and node.distance < smallest_distance:
                 smallest_node = node
                 smallest_distance = node.distance
@@ -583,37 +578,36 @@ def getClosestToVehicle(graph, vehicle_state):
     # Used to specify search range for finding closest point
     search_range = 100
 
-    pos = Point(vehicle_state.x, vehicle_state.y)
-    start_node = None
-
     # Normalizing theta
     theta = degrees(vehicle_state.theta1) % 360
+    pos = Point(vehicle_state.x, vehicle_state.y)
+    nodes = graph.nodes.values()
 
     # Vehicle angle: bottom-to-top
     if theta > 225 and theta <= 315:
         # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range, 0), pos, search_range)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range, 0), pos, search_range)
         # Selecting all Nodes which have an out-edge upwards from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.up)
 
     # Vehicle angle: right-to-left
     elif theta > 135 and theta <= 225:
         # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range), pos, search_range, 0)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, search_range, 0)
         # Selecting all Nodes which have an out-edge to the left from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.left)
 
     # Vehicle angle: top-to-bottom
     elif theta > 45 and theta <= 135:
         # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, 0, search_range), pos, search_range)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, 0, search_range), pos, search_range)
         # Selecting all Nodes which have an out-edge downwards from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.down)
 
     # Vehicle angle: left-to-right
     elif theta > 315 or theta <=45:
         # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(graph.nodes, pos, search_range), pos, 0, search_range)
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, 0, search_range)
         # Selecting all Nodes which have an out-edge to the right from vehicle position
         nodes = getAllInRightDir(nodes, pos, Direction.right)
 
@@ -638,7 +632,7 @@ def plotGraph(graph, color, scale=1):
     ax = plt.axes()
 
     # Plotting all graph edges
-    for node in graph.nodes:
+    for node in graph.nodes.values():
         for out_edge in node.out_edges:
             dx = out_edge.x/scale - node.x/scale
             dy = out_edge.y/scale - node.y/scale

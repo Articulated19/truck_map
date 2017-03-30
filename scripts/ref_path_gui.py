@@ -10,8 +10,6 @@ import warnings
 import _tkinter
 from math import sin, cos, radians
 
-import time
-
 
 IMG_PATH = '/map.png'
 GRAPH_PATH = '/graph.txt'
@@ -201,9 +199,8 @@ class RefPath:
 
                 # Calculating shortest path between the points
                 for point in self.pts[1:]:
-                    s_time = time.time()
                     path = shortestPath(self.graph, start, Point(point[0], point[1]))
-                    print time.time() - s_time
+
                     if path != None:
                         self.partial_path += path[1:]
                         start = Point(self.partial_path[-1][0], self.partial_path[-1][1])
