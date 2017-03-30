@@ -78,7 +78,7 @@ class RefPath:
 # Main, used for testing
 if __name__ == '__main__':
 
-    COORDS_VALID_ = [
+    COORDS_VALID = [
         (255.0520833333332, 339.2578125000000),
         (317.8776041666666, 716.210937),
         (260.078125, 856.9401041666667)

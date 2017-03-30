@@ -163,7 +163,7 @@ class RefPath:
             print "=====\n[] returned"
         else:
             print "=====\nPath returned"
-            print "Path:", self.path
+            #print "Path:", self.path
 
         return self.path
 
