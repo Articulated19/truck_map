@@ -7,6 +7,7 @@ import gc
 
 
 SCALE = 10  # Savefile is in mm, and Graph in cm
+INFINITE = float('inf')
 
 
 # For representing a Point in a coordinate system
@@ -143,7 +144,7 @@ class Node:
         self.out_edges = out_edges if out_edges else []
 
         # For use in shortestpath()
-        self.distance = float('inf')
+        self.distance = INFINITE
         self.visited = False
         self.in_edges = []
 
@@ -437,6 +438,8 @@ def findShortestPath(graph, start_node, end_node):
         return []
 
     unvisited_set = graph.copyGraph()
+    visited_set = set([])
+    #unvisited_set = graph
 
     start = unvisited_set.getNode(start_node.x, start_node.y)
     end = unvisited_set.getNode(end_node.x, end_node.y)
@@ -703,5 +706,5 @@ def plotGraph(graph, color, scale=1):
         for out_edge in node.out_edges:
             dx = out_edge.x/scale - node.x/scale
             dy = out_edge.y/scale - node.y/scale
-            #ax.arrow(node.x/scale, node.y/scale, dx, dy, head_width=80/scale, head_length=100/scale, fc=color, ec=color)
+            #ax.arrow(node.x/scale, node.y/scale, dx, dy, head_width=8/scale, head_length=10/scale, fc=color, ec=color)
             ax.arrow(node.x/scale, node.y/scale, dx, dy, fc=color, ec=color)

@@ -155,7 +155,6 @@ class Map:
 
         # Going through all rows in the matrix
         for i in range(height):
-            row = []
 
             # Going through all elements on each row
             for j in range(width):
@@ -183,6 +182,26 @@ class Map:
         except IndexError:
             print "Map element index out of bounds"
             return None
+
+
+    # Takes (x, y)-coordinates
+    #
+    # Coordinates are assumed to be in cm
+    #
+    # If there is an Obstacle at given position:
+    #     Returns the index of that obstacle
+    # Otherwise:
+    #     Returns None
+    def getObstacle(self, x, y):
+        (ix, iy) = (int(x), int(y))
+
+        for index, o in enumerate(self.obstacles):
+            if ix in range(o.x, o.x + o.width) and iy in range(o.y - (o.height-1), o.y+1):
+                # Obstacle found
+                return index
+
+        # No obstacle found
+        return None
 
 
 # Takes a path (relative to current directory) to a an image file containing a Map representation
