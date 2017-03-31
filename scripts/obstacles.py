@@ -3,9 +3,43 @@ from map_func import *
 
 from os.path import dirname, abspath
 from PIL import Image
+import matplotlib.patches as patches
+import matplotlib.text as text
 
 
 IMG_PATH = '/map.png'
+
+
+# For adding matplotlib-specific plot elements to an Obstacle object
+class ObstaclePlot:
+
+    # Takes an Obstacle object
+    def __init__(self, obstacle):
+        self.obstacle = obstacle
+
+        # For handling user input
+        self.plot = None
+        self.text = None
+        
+        # For plotting with matplotlib
+        self.text_x = (self.obstacle.x + self.obstacle.width + 10)
+        self.text_y = (self.obstacle.y - self.obstacle.height)
+
+        self.activated_patch = patches.Rectangle(
+                (self.obstacle.x, self.obstacle.y),  # Lower left corner
+                self.obstacle.width,
+                -self.obstacle.height,
+                fc='r', ec='0.5',
+                linewidth=self.obstacle.padding
+            )
+
+        self.deactivated_patch = patches.Rectangle(
+                (self.obstacle.x, self.obstacle.y),  # Lower left corner
+                self.obstacle.width,
+                -self.obstacle.height,
+                fc='b', ec='0.5',
+                linewidth=self.obstacle.padding
+            )
 
 
 class ObstacleHandler:
@@ -15,6 +49,10 @@ class ObstacleHandler:
 
         self.map_img = Image.open(dirpath + IMG_PATH)
         self.map = Map()
+
+        self.obstacles = []
+        for obstacle in self.map.obstacles:
+            self.obstacles.append(ObstaclePlot(obstacle))
 
         # For plotting
         self.ax = None
@@ -31,13 +69,13 @@ class ObstacleHandler:
             # Checking if there is an obstacle in 'obstacles' that corresponds with given number,
             # only proceeding if there is
             try:
-                obstacle = self.map.obstacles[index]
+                obstacle = self.obstacles[index]
             except IndexError:
                 print "There is no obstacle with identifier '%s'" % (index+1)
                 return
 
             # If the obstacle is active: Deactivating it
-            if obstacle.active:
+            if obstacle.obstacle.active:
                 # Removing obstacle from the map matrix
                 self.map.removeObstacle(index)
                 print "Obstacle '%s' was deactivated" % (index+1)
@@ -87,8 +125,8 @@ class ObstacleHandler:
         # Displaying map image
         img_plot = plt.imshow(self.map_img)
         # Displaying all obstacles
-        for i, obstacle in enumerate(self.map.obstacles):
-            if obstacle.active:
+        for i, obstacle in enumerate(self.obstacles):
+            if obstacle.obstacle.active:
                 if obstacle.plot:
                     obstacle.plot.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.activated_patch)

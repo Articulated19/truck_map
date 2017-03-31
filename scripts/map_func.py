@@ -2,8 +2,6 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.text as text
 from os.path import dirname, abspath
 from math import ceil
 
@@ -26,31 +24,7 @@ class Obstacle:
         self.padding = padding
 
         self.matrix_backup = []
-
-        # For handling user input
         self.active = False
-        self.plot = None
-        self.text = None
-        
-        # For plotting with matplotlib
-        self.text_x = (self.x + self.width + 10)
-        self.text_y = (self.y - self.height)
-
-        self.activated_patch = patches.Rectangle(
-                (self.x, self.y),  # Lower left corner
-                self.width,
-                -self.height,
-                fc='r', ec='0.5',
-                linewidth=padding
-            )
-
-        self.deactivated_patch = patches.Rectangle(
-                (self.x, self.y),  # Lower left corner
-                self.width,
-                -self.height,
-                fc='b', ec='0.5',
-                linewidth=padding
-            )
 
 
 # All measurements (including coordinates) are in cm

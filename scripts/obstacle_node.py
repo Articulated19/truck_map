@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # license removed for brevity
 from map_func import *
+from obstacles import ObstaclePlot
 
 import rospy
 from std_msgs.msg import Int8
@@ -19,6 +20,10 @@ class ObstacleHandler:
 
         self.map_img = Image.open(dirpath + IMG_PATH)
         self.map = Map()
+
+        self.obstacles = []
+        for obstacle in self.map.obstacles:
+            self.obstacles.append(ObstaclePlot(obstacle))
 
         # For plotting
         self.ax = None
@@ -39,13 +44,13 @@ class ObstacleHandler:
             # Checking if there is an obstacle in 'obstacles' that corresponds with given number,
             # only proceeding if there is
             try:
-                obstacle = self.map.obstacles[index]
+                obstacle = self.obstacles[index]
             except IndexError:
                 print "There is no obstacle with identifier '%s'" % (index+1)
                 return
 
             # If the obstacle is active: Deactivating it
-            if obstacle.active:
+            if obstacle.obstacle.active:
                 # Removing obstacle from the map matrix
                 self.map.removeObstacle(index)
                 print "=====\nObstacle '%s' was deactivated" % (index+1)
@@ -96,8 +101,8 @@ class ObstacleHandler:
         # Displaying map image
         img_plot = plt.imshow(self.map_img)
         # Displaying all obstacles
-        for i, obstacle in enumerate(self.map.obstacles):
-            if obstacle.active:
+        for i, obstacle in enumerate(self.obstacles):
+            if obstacle.obstacle.active:
                 if obstacle.plot:
                     obstacle.plot.remove()
                 obstacle.plot = self.ax.add_patch(obstacle.activated_patch)

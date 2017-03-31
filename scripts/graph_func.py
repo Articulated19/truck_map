@@ -440,6 +440,65 @@ def findShortestPath(graph, start_node, end_node):
     return path
 
 
+# Takes a Graph and a VehicleState object
+#
+# If there is a Node with an out-edge in the right Direction (with respect to theta):
+#     Returns the closest Node which has an out-edge in the right Direction
+# Otherwise:
+#     Returns None
+def getClosestToVehicle(graph, vehicle_state):
+
+    # Used to specify search range for finding closest point
+    search_range = 100
+
+    # Normalizing theta
+    theta = degrees(vehicle_state.theta1) % 360
+    pos = Point(vehicle_state.x, vehicle_state.y)
+    nodes = graph.nodes.values()
+
+    # Vehicle angle: bottom-to-top
+    if theta > 225 and theta <= 315:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range, 0), pos, search_range)
+        # Selecting all Nodes which have an out-edge upwards from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.up)
+
+    # Vehicle angle: right-to-left
+    elif theta > 135 and theta <= 225:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, search_range, 0)
+        # Selecting all Nodes which have an out-edge to the left from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.left)
+
+    # Vehicle angle: top-to-bottom
+    elif theta > 45 and theta <= 135:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, 0, search_range), pos, search_range)
+        # Selecting all Nodes which have an out-edge downwards from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.down)
+
+    # Vehicle angle: left-to-right
+    elif theta > 315 or theta <=45:
+        # Selecting all Nodes which are in range from the vehicle
+        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, 0, search_range)
+        # Selecting all Nodes which have an out-edge to the right from vehicle position
+        nodes = getAllInRightDir(nodes, pos, Direction.right)
+
+    # Returning None if No Node is in range
+    if not nodes:
+        return None
+        
+    # Finding the two Nodes which are closest to the vehicle, x-wise resp. y-wise
+    closest_x = getClosestX(nodes, pos)
+    closest_y = getClosestY(nodes, pos)
+    # Selecting the Node which is closest to the vehicle:
+    dx = Node(pos.x, pos.y).getEdgeLength(closest_x)
+    dy = Node(pos.x, pos.y).getEdgeLength(closest_y)
+    start_node = closest_x if dx <= dy else closest_y
+
+    return start_node
+
+
 # Takes an array of Node objects, Point object and range limits to the left resp. to the right
 #
 # Returns an array with all Nodes that are in range (set by given limits) x-wise from given Point
@@ -565,65 +624,6 @@ def hasOutEdgeInRightDir(node, direction):
 
     # No out-edge in the given Direction
     return False
-
-
-# Takes a Graph and a VehicleState object
-#
-# If there is a Node with an out-edge in the right Direction (with respect to theta):
-#     Returns the closest Node which has an out-edge in the right Direction
-# Otherwise:
-#     Returns None
-def getClosestToVehicle(graph, vehicle_state):
-
-    # Used to specify search range for finding closest point
-    search_range = 100
-
-    # Normalizing theta
-    theta = degrees(vehicle_state.theta1) % 360
-    pos = Point(vehicle_state.x, vehicle_state.y)
-    nodes = graph.nodes.values()
-
-    # Vehicle angle: bottom-to-top
-    if theta > 225 and theta <= 315:
-        # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range, 0), pos, search_range)
-        # Selecting all Nodes which have an out-edge upwards from vehicle position
-        nodes = getAllInRightDir(nodes, pos, Direction.up)
-
-    # Vehicle angle: right-to-left
-    elif theta > 135 and theta <= 225:
-        # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, search_range, 0)
-        # Selecting all Nodes which have an out-edge to the left from vehicle position
-        nodes = getAllInRightDir(nodes, pos, Direction.left)
-
-    # Vehicle angle: top-to-bottom
-    elif theta > 45 and theta <= 135:
-        # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, 0, search_range), pos, search_range)
-        # Selecting all Nodes which have an out-edge downwards from vehicle position
-        nodes = getAllInRightDir(nodes, pos, Direction.down)
-
-    # Vehicle angle: left-to-right
-    elif theta > 315 or theta <=45:
-        # Selecting all Nodes which are in range from the vehicle
-        nodes = getAllInRangeX(getAllInRangeY(nodes, pos, search_range), pos, 0, search_range)
-        # Selecting all Nodes which have an out-edge to the right from vehicle position
-        nodes = getAllInRightDir(nodes, pos, Direction.right)
-
-    # Returning None if No Node is in range
-    if not nodes:
-        return None
-        
-    # Finding the two Nodes which are closest to the vehicle, x-wise resp. y-wise
-    closest_x = getClosestX(nodes, pos)
-    closest_y = getClosestY(nodes, pos)
-    # Selecting the Node which is closest to the vehicle:
-    dx = Node(pos.x, pos.y).getEdgeLength(closest_x)
-    dy = Node(pos.x, pos.y).getEdgeLength(closest_y)
-    start_node = closest_x if dx <= dy else closest_y
-
-    return start_node
 
 
 # For plotting a Graph
