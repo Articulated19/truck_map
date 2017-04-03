@@ -1,4 +1,0 @@
-*.pyc
-
-# Ignore all local test-files
-test*
