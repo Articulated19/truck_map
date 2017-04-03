@@ -366,7 +366,74 @@ def shortestPath(graph, start, end):
         dy = Node(end.x, end.y).getEdgeLength(closest_y)
         end_node = closest_x if dx <= dy else closest_y
 
-    return findShortestPath(graph, start_node, end_node)
+    path, l, a = findShortestPath(graph, start_node, end_node)
+    return path
+
+
+# Takes a Graph, two Point objects with (x, y)-coordinates for start and end point,
+# and a number for which alternative path (in length order) to return
+# ('nth'=1 for the first alternative path, 'nth'=2 for the second, etc)
+#
+# The given start and end Points have to exactly match Nodes in the given Graph
+# The given 'nth'-value has to be >= 1
+#
+# If given paramaters are invalid:
+#     Returns None
+# If there exists a 'nth'-alternative path between the given Points:
+#     Returns that path
+# Otherwise:
+#     Returns []
+def altPath(graph, start, end, nth):
+    start_node = graph.getNode(start.x, start.y)
+    end_node = graph.getNode(end.x, end.y)
+    paths = []
+
+    # Returning None if the given start and end Points do Not exactly match Nodes in the given Graph,
+    # or if given 'nth'-value is invalid
+    if not start_node or not end_node or nth < 1:
+        return None
+
+    p, length, alt = findShortestPath(graph, start_node, end_node)
+
+    # Going through all first-level alternatives
+    for node in alt:
+        try:
+            path_1, length_1, alt_1 = findShortestPath(graph, start_node, node)
+        except ValueError:
+            path_1 = []
+        try:
+            path_2, length_2, alt_2 = findShortestPath(graph, node, end_node)
+        except ValueError:
+            path_2 = []
+
+        # Only moving forward if an alternative path could be created via this Node
+        if path_1 and path_2:
+            paths.append((path_1[:-1] + path_2, length_1 + length_2))
+
+            # Going through all second-level alternatives
+            for node_2 in alt_2:
+                try:
+                    path_21, length_21, alt_21 = findShortestPath(graph, node, node_2)
+                except ValueError:
+                    path_21 = []
+                try:
+                    path_22, length_22, alt_22 = findShortestPath(graph, node_2, end_node)
+                except ValueError:
+                    path_22 = []
+
+                # Only moving forward if an alternative path could be created via this Node
+                if path_21 and path_22:
+                    path = (path_21[:-1] + path_22, length_21 + length_22)
+                    paths.append((path_1[:-1] + path[0], length_1 + path[1]))
+
+
+    # Making sure the paths are in order, sorted by length
+    paths = sorted(paths, key=lambda tup: tup[1])
+
+    try:
+        return paths[nth-1][0]
+    except IndexError:
+        return []
 
 
 # Help function for 'shortestPath'
@@ -426,6 +493,9 @@ def findShortestPath(graph, start_node, end_node):
     current_node = end_node
     path.insert(0, (current_node.x, current_node.y))
 
+    # For creating alternative paths
+    alternatives = []
+
     # Repeating until start Node is reached
     while current_node != start_node:
 
@@ -433,11 +503,18 @@ def findShortestPath(graph, start_node, end_node):
         for node in current_node.in_edges:
             edge_length = node.getEdgeLength(current_node)
             if (node.distance + edge_length) == current_node.distance:
+
+                # If this is a point where we can go more than one way, adding the alternative Node to 'alternatives'
+                if len(node.out_edges) > 1:
+                    for out_edge in node.out_edges:
+                        if out_edge != current_node:
+                            alternatives.append(out_edge)
+
                 current_node = node
                 path.insert(0, (current_node.x, current_node.y))
                 break
 
-    return path
+    return path, end_node.distance, alternatives
 
 
 # Takes a Graph and a VehicleState object

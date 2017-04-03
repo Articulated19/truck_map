@@ -35,6 +35,8 @@ class RefPath:
         self.graph = readFileToGraph(GRAPH_PATH)
         self.path = []
 
+        self.counter = 1
+
         # To handle user input
         self.valid = False
         self.pts = None
@@ -145,7 +147,7 @@ class RefPath:
         plt.plot(vx, vy, 'ob', markersize=10)
         self.ax.arrow(vx, vy, dx, dy, linewidth=2, head_width=10, head_length=12, fc='b', ec='b')
         # Plotting start point
-        plt.plot(self.start_point.x, self.start_point.y, 'or', markersize = 5)
+        plt.plot(self.start_point.x, self.start_point.y, 'or', markersize=5)
 
         self.key_handler = None
         self.valid = False
