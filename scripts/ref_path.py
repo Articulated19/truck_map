@@ -43,7 +43,7 @@ class RefPath:
         start_point = getClosestToVehicle(self.graph, vehicle_state)
         if not start_point:
             print "== ERROR: The vehicle is too far away from a valid path"
-            return []
+            return [], []
 
         self.path = []
         self.indexes = []

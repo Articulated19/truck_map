@@ -31,7 +31,7 @@ class Obstacle:
 OBSTACLES = [
         Obstacle(178, 375, 20, 31, 2),
         Obstacle(202, 436, 14, 22, 2),
-        Obstacle(147, 686, 40, 28, 1),
+        Obstacle(147, 686, 100, 100, 1),
         Obstacle(288, 844, 40, 35, 3)
     ]
 
