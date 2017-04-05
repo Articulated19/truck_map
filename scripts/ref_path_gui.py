@@ -232,6 +232,6 @@ class RefPath:
 # Main, used for testing
 if __name__ == '__main__':
     refpath_obj = RefPath()
-    vehicle_state = VehicleState(400, 163, radians(90), 0)
+    vehicle_state = VehicleState(237, 869, radians(180), 0)
     
     path = refpath_obj.getRefPath(vehicle_state)

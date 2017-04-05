@@ -370,27 +370,23 @@ def shortestPath(graph, start, end):
     return path
 
 
-# Takes a Graph, two Point objects with (x, y)-coordinates for start and end point,
-# and a number for which alternative path (in length order) to return
-# ('nth'=1 for the first alternative path, 'nth'=2 for the second, etc)
+# Takes a Graph, and two Point objects with (x, y)-coordinates for start and end point
 #
 # The given start and end Points have to exactly match Nodes in the given Graph
-# The given 'nth'-value has to be >= 1
 #
 # If given paramaters are invalid:
 #     Returns None
-# If there exists a 'nth'-alternative path between the given Points:
-#     Returns that path
+# If there is at least one alternative path between the given start and end points:
+#     Returns an array of alternative paths between given start and end points
 # Otherwise:
 #     Returns []
-def altPath(graph, start, end, nth):
+def altPaths(graph, start, end):
     start_node = graph.getNode(start.x, start.y)
     end_node = graph.getNode(end.x, end.y)
     paths = []
 
-    # Returning None if the given start and end Points do Not exactly match Nodes in the given Graph,
-    # or if given 'nth'-value is invalid
-    if not start_node or not end_node or nth < 1:
+    # Returning None if the given start and end Points do Not exactly match Nodes in the given Graph
+    if not start_node or not end_node:
         return None
 
     p, length, alt = findShortestPath(graph, start_node, end_node)
@@ -426,14 +422,28 @@ def altPath(graph, start, end, nth):
                     path = (path_21[:-1] + path_22, length_21 + length_22)
                     paths.append((path_1[:-1] + path[0], length_1 + path[1]))
 
+                    # Going through all third-level alternatives
+                    for node_3 in alt_22:
+                        try:
+                            path_31, length_31, alt_31 = findShortestPath(graph, node_2, node_3)
+                        except ValueError:
+                            path_31 = []
+                        try:
+                            path_32, length_32, alt_32 = findShortestPath(graph, node_3, end_node)
+                        except ValueError:
+                            path_32 = []
+
+                        # Only moving forward if an alternative path could be created via this Node
+                        if path_31 and path_32:
+                            path = (path_31[:-1] + path_32, length_31 + length_32)
+                            paths.append((path_1[:-1] + path_21[:-1] + path[0], length_1 + length_21 + path[1]))
+
 
     # Making sure the paths are in order, sorted by length
     paths = sorted(paths, key=lambda tup: tup[1])
+    paths = map(lambda path: path[0], paths)
 
-    try:
-        return paths[nth-1][0]
-    except IndexError:
-        return []
+    return paths
 
 
 # Help function for 'shortestPath'
