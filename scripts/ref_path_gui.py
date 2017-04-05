@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from graph_func import *
 from map_func import *
+from shortest_path import *
 
 import matplotlib.pyplot as plt
 from pylab import ginput
@@ -227,6 +227,9 @@ class RefPath:
                 self.key_handler = self.fig.canvas.mpl_connect('key_press_event', self.onKeyPress)
                 print "=====\nPress 'Enter' to keep the path, 'a' to add to the path, 'Backspace' to discard"
                 plt.show()
+
+            else:
+                self.pts = None
 
 
 # Main, used for testing

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from graph_func import *
+from shortest_path import *
 
 import warnings
 import _tkinter
@@ -24,6 +24,7 @@ class RefPath:
     def __init__(self):
         self.graph = readFileToGraph(GRAPH_PATH)
         self.path = []
+        self.alt_paths = ([], 0, 0)
         self.indexes = []
 
 
@@ -32,19 +33,23 @@ class RefPath:
     # Calculates the shortest path from vehicle position to the first coordinate point,
     # and from each coordinate point to the next
     #
-    # Returns a reference path in the form of an array of tuples of (x, y)-coordinates (in cm),
-    # and an array with indexes for the points on the path which coincide with the start point,
-    # and the given (x, y)-coordinates
+    # If a path could be created:
+    #     Returns a reference path in the form of an array of tuples of (x, y)-coordinates (in cm),
+    #     and an array with indexes for the points on the path which coincide with the start point,
+    #     and the given (x, y)-coordinates
+    # Otherwise:
+    #     Returns [], []
     def getRefPath(self, vehicle_state, pts):
 
         # Finding the Node (in valid direction) which is closest to the vehicle, to use as a start point
-        # Returns [] if the vehicle is too far away from a valid start point
         start_point = getClosestToVehicle(self.graph, vehicle_state)
+        # Returns [], [] if the vehicle is too far away from a valid start point
         if not start_point:
             print "== ERROR: The vehicle is too far away from a valid path"
-            return []
+            return [], []
 
         self.path = []
+        self.alt_paths = ([], 0, 0)
         self.indexes = []
 
         # Adding 'start_point' first in 'pts'
@@ -67,6 +72,7 @@ class RefPath:
                 # If the given coordinate points were not in range of any Nodes
                 else:
                     self.path = []
+                    self.indexes = []
                     print "== ERROR: Reference path out of range for %s" % str(point)
                     break
 
@@ -90,8 +96,9 @@ class RefPath:
     #     with the segement between given start and end points replaced with each of the alternative paths found
     # Otherwise:
     #     Returns []
-    def getAltPath(self, path, start_index, end_index):
+    def getAltPaths(self, path, start_index, end_index):
 
+        # Checking validity of given indexes
         try:
             start_point = Point(*path[start_index])
             end_point = Point(*path[end_index])
@@ -104,47 +111,64 @@ class RefPath:
         if alt_paths:
             for i, alt in enumerate(alt_paths):
                 alt_paths[i] = path[:start_index] + alt + path[end_index+1:]
-
-            return alt_paths
         else:
             print "No alternative path found"
+        
+        self.path = path
+        self.alt_paths = (alt_paths, start_index, end_index)
+        return alt_paths
+
+
+    # Takes a path (as returned by getRefPath()),
+    # indexes for the start resp. end point for the segment which should be replaced,
+    # and a number (>= 1) specifying which alternative path to use
+    # ('nth'=1 for the first alternative path, 'nth'=2 for the second, etc.)
+    #
+    # If the given parameters are invalid:
+    #     Returns None
+    # If there is a nth alternative path between the given start and end points:
+    #     Returns the given path, with the segement between given start and end points replaced with an alternative path
+    # Otherwise:
+    #     Returns []
+    def getAltPath(self, path, start_index, end_index, nth):
+
+        # Checking validity of given 'nth'-value
+        if nth < 1:
+            print "ERROR: Invalid value for parameter 'nth'"
+            return None
+
+        alt = self.alt_paths
+
+        # If the complete set of alternative paths have already been computed for the given parameters,
+        if path == self.path and alt[0] and start_index == alt[1] and end_index == alt[2]:
+            alt_paths = alt[0]
+        else:
+            alt_paths = self.getAltPaths(path, start_index, end_index)
+
+        try:
+            return alt_paths[nth-1]
+        except IndexError:
+            print "There is no '%s'-alternative path" % nth
             return []
 
 
 # Main, used for testing
 if __name__ == '__main__':
 
-    COORDS_VALID = [
-        (255.0520833333332, 339.2578125000000),
-        (317.8776041666666, 716.210937),
-        (260.078125, 856.9401041666667)
-    ]
-
-    COORDS_VALID_2 = [(101, 765), (358, 535)]
-
-    COORDS_INVALID = [
-        (270.1302083333332, 339.2578125000000),
-        (320.390625, 515.1692708333333),
-        (413.3723958333332, 686.0546875)  # This point is out of range
-    ]
-
+    COORDS = [(101, 765), (358, 535)]
 
     refpath_obj = RefPath()
-    vehicle_state = VehicleState(400, 163, radians(90), 0)
-    vehicle_state_2 = VehicleState(237, 869, radians(180), 0)
-
-    # INVALID PATH
-    """
-    path = refpath_obj.getRefPath(vehicle_state, COORDS_INVALID)
-    """
-
-    # VALID PATH
+    vehicle_state = VehicleState(237, 869, radians(180), 0)
     
-    path, indexes = refpath_obj.getRefPath(vehicle_state_2, COORDS_VALID_2)
-    alt_paths = refpath_obj.getAltPath(path, indexes[1], indexes[2])
-    alt_paths.insert(0, path)
+    path, indexes = refpath_obj.getRefPath(vehicle_state, COORDS)
+    #alt_paths = refpath_obj.getAltPaths(path, indexes[1], indexes[2])
 
-    for alt in alt_paths:
+    for i in range(1, 100):
+        alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i)
+        next_alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i+1)
+        #if alt == next_alt:
+            #print "SAME"
+
         # Plotting graph
         plt.axis('scaled')
         plt.xlim( (0, 490) )
@@ -157,3 +181,4 @@ if __name__ == '__main__':
         plt.plot(xs, ys, '-r', linewidth=3.0)
 
         plt.show()
+        if not next_alt: break

@@ -1,16 +1,49 @@
 #!/usr/bin/env python
 # license removed for brevity
 from map_func import *
-from obstacles import ObstaclePlot
 
 import rospy
 from std_msgs.msg import Int8
 from os.path import dirname, abspath
 from PIL import Image
+import matplotlib.patches as patches
+import matplotlib.text as text
 
 
 PUBLISH_TOPIC = 'map_updated'
 IMG_PATH = '/map.png'
+
+
+# For adding matplotlib-specific plot elements to an Obstacle object
+class ObstaclePlot:
+
+    # Takes an Obstacle object
+    def __init__(self, obstacle):
+        self.obstacle = obstacle
+
+        # For handling user input
+        self.plot = None
+        self.text = None
+        
+        # For plotting with matplotlib
+        self.text_x = (self.obstacle.x + self.obstacle.width + 10)
+        self.text_y = (self.obstacle.y - self.obstacle.height)
+
+        self.activated_patch = patches.Rectangle(
+                (self.obstacle.x, self.obstacle.y),  # Lower left corner
+                self.obstacle.width,
+                -self.obstacle.height,
+                fc='r', ec='0.5',
+                linewidth=self.obstacle.padding
+            )
+
+        self.deactivated_patch = patches.Rectangle(
+                (self.obstacle.x, self.obstacle.y),  # Lower left corner
+                self.obstacle.width,
+                -self.obstacle.height,
+                fc='b', ec='0.5',
+                linewidth=self.obstacle.padding
+            )
 
 
 class ObstacleHandler:
