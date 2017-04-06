@@ -7,7 +7,6 @@ from math import ceil
 
 
 IMG_PATH = '/map.png'
-
 SCALE = 10  # Map img is in scale 1:10
 
 

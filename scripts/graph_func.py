@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 
 
 SCALE = 10  # Savefile is in mm, and Graph in cm
-INF = float('inf')
 
 
 # For representing a Point in a coordinate system
@@ -76,8 +75,6 @@ class Graph:
     # For resetting the parameters used in shortestPath()
     def resetGraph(self):
         for node in self.nodes.values():
-            node.distance = INF
-            node.visited = False
             node.count = 0
 
 
@@ -93,8 +90,6 @@ class Node:
         self.in_edges = []
 
         # For use in shortestPath()
-        self.distance = INF
-        self.visited = False
         self.count = 0
 
 

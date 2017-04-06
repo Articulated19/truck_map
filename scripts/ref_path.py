@@ -6,10 +6,9 @@ import _tkinter
 from math import sin, cos, radians
 import matplotlib.pyplot as plt
 
-import time
-
 
 GRAPH_PATH = '/graph.txt'
+ALT_PATHS = 50  # Maximum number of alternative paths to search for
 
 
 class VehicleState:
@@ -83,7 +82,7 @@ class RefPath:
             print "[] returned"
         else:
             print "Path returned"
-            print "Path:", self.path
+            #print "Path:", self.path
 
         return self.path, self.indexes
 
@@ -108,12 +107,13 @@ class RefPath:
             print "ERROR: Index out of bounds"
             return None
 
-        alt_paths = kShortestPaths(self.graph, start_point, end_point, 50)
+        alt_paths = altPaths(self.graph, start_point, end_point, ALT_PATHS)
 
         if alt_paths:
-            for i, alt in enumerate(alt_paths[1:]):
+            for i, alt in enumerate(alt_paths):
                 alt_paths[i] = path[:start_index] + alt + path[end_index+1:]
         else:
+            alt_paths = []
             print "No alternative path found"
         
         self.path = path
@@ -163,16 +163,9 @@ if __name__ == '__main__':
     vehicle_state = VehicleState(237, 869, radians(180), 0)
     
     path, indexes = refpath_obj.getRefPath(vehicle_state, COORDS)
-    #alt_paths = refpath_obj.getAltPaths(path, indexes[1], indexes[2])
 
     for i in range(1, 100):
-        t = time.time()
         alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i)
-        print time.time() - t
-
-        next_alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i+1)
-        #if alt == next_alt:
-            #print "SAME"
 
         # Plotting graph
         plt.axis('scaled')
@@ -186,4 +179,5 @@ if __name__ == '__main__':
         plt.plot(xs, ys, '-r', linewidth=3.0)
 
         plt.show()
+        next_alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i+1)
         if not next_alt: break
