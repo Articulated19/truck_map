@@ -78,6 +78,7 @@ class Graph:
         for node in self.nodes.values():
             node.distance = INF
             node.visited = False
+            node.count = 0
 
 
 # For representing a Node in a Graph
@@ -94,6 +95,7 @@ class Node:
         # For use in shortestPath()
         self.distance = INF
         self.visited = False
+        self.count = 0
 
 
     # String representation of a Node object

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from graph_func import *
 
+from heapq import heappush, heappop
+
 
 # Takes a Graph and two Point objects with (x, y)-coordinates for start and end point
 #
@@ -61,6 +63,40 @@ def shortestPath(graph, start, end):
         return result
 
 
+def kShortestPaths(graph, start, end, k):
+    start_node = graph.getNode(start.x, start.y)
+    end_node = graph.getNode(end.x, end.y)
+    path_heap = []
+    paths = []
+    paths_ = []
+
+    graph.resetGraph()
+    heappush(path_heap, (0, [(start_node.x, start_node.y)]))
+
+    while path_heap and end_node.count < k:
+        cost, path = heappop(path_heap)
+        last_node = graph.getNode(path[-1][0], path[-1][1])
+        last_node.count += 1
+
+        if last_node == end_node:
+            paths.append((path, cost))
+
+        elif last_node.count <= k:
+            for out_edge in last_node.out_edges:
+                if (out_edge.x, out_edge.y) not in path:
+                    new_path = []
+                    for coord in path:
+                        new_path.append(coord)
+                    new_path.append((out_edge.x, out_edge.y))
+                    new_cost = cost + last_node.getEdgeLength(out_edge)
+                    heappush(path_heap, (new_cost, new_path))
+
+
+    paths_ = map(lambda (path, cost): path, paths)
+    return paths_
+
+
+    
 # Takes a Graph, and two Point objects with (x, y)-coordinates for start and end point
 #
 # The given start and end Points have to exactly match Nodes in the given Graph

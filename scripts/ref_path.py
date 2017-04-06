@@ -6,6 +6,8 @@ import _tkinter
 from math import sin, cos, radians
 import matplotlib.pyplot as plt
 
+import time
+
 
 GRAPH_PATH = '/graph.txt'
 
@@ -106,10 +108,10 @@ class RefPath:
             print "ERROR: Index out of bounds"
             return None
 
-        alt_paths = altPaths(self.graph, start_point, end_point)
+        alt_paths = kShortestPaths(self.graph, start_point, end_point, 50)
 
         if alt_paths:
-            for i, alt in enumerate(alt_paths):
+            for i, alt in enumerate(alt_paths[1:]):
                 alt_paths[i] = path[:start_index] + alt + path[end_index+1:]
         else:
             print "No alternative path found"
@@ -164,7 +166,10 @@ if __name__ == '__main__':
     #alt_paths = refpath_obj.getAltPaths(path, indexes[1], indexes[2])
 
     for i in range(1, 100):
+        t = time.time()
         alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i)
+        print time.time() - t
+
         next_alt = refpath_obj.getAltPath(path, indexes[1], indexes[2], i+1)
         #if alt == next_alt:
             #print "SAME"
