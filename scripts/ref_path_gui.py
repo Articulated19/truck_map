@@ -103,9 +103,9 @@ class RefPath:
 
 
     # Takes a VehicleState object,
-    # and an array of tuples of (x, y)-coordinates (assumed to be in cm) (optional)
+    # and an array of tuples of (x, y)-coordinates, assumed to be in cm (optional)
     #
-    # Lets user input destination and calculates the shortest path to that destination
+    # Lets user input desired destination and calculates the shortest path to that destination
     #
     # Returns a reference path in the form of an array of tuples of (x, y)-coordinates (in cm)
     def getRefPath(self, vehicle_state, pts=None):
@@ -169,7 +169,7 @@ class RefPath:
 
 
     # Help function to 'getRefPath()'
-    # Lets user input destination and calculates the shortest path to that destination
+    # Lets user input desired destination and calculates the shortest path to that destination
     def createRefPath(self):
         self.exit_handler = self.fig.canvas.mpl_connect('close_event', self.onExit)
 
@@ -188,7 +188,7 @@ class RefPath:
                     except _tkinter.TclError:
                         return []
 
-            # Adding 'start_point' first in 'pts'
+            # Adding start point to 'pts'
             self.pts.insert(0, (self.start_point.x, self.start_point.y))
 
             # If at least one point was inputted
