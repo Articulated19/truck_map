@@ -7,6 +7,7 @@ from math import ceil
 
 
 IMG_PATH = '/map.png'
+IMG_PATH_CENTERLINE = '/map_centerline.png'
 SCALE = 10  # Map img is in scale 1:10
 
 
@@ -28,17 +29,25 @@ class Obstacle:
 
 # All measurements (including coordinates) are in cm
 OBSTACLES = [
-        Obstacle(178, 375, 20, 31, 2),
-        Obstacle(202, 436, 14, 22, 2),
-        Obstacle(147, 686, 100, 100, 1),
-        Obstacle(288, 844, 40, 35, 3)
+        Obstacle(110, 143, 30, 60, 1),
+        Obstacle(220, 150, 30, 20, 1),
+        Obstacle(147, 446, 50, 100, 1),
+        Obstacle(288, 844, 30, 35, 1),
+        Obstacle(200, 634, 30, 25, 1),
+        Obstacle(60, 800, 20, 30, 1)
     ]
 
 
 class Map:
 
-    def __init__(self):
-        self.matrix = readImgToMatrix(IMG_PATH)
+    def __init__(self, centerline=False):
+        
+        if centerline:
+            path = IMG_PATH_CENTERLINE
+        else:
+            path = IMG_PATH
+            
+        self.matrix = readImgToMatrix(path)
         self.scale = SCALE
         self.obstacles = OBSTACLES
 
