@@ -57,7 +57,7 @@ class Map:
 
 
     # Takes an Index value
-    # Adds the corresponding Obstacle from 'obstacles' to the 'matrix' of this Map
+    # Adds the corresponding Obstacle to the matrix of this Map
     #
     # If an Obstacle was added:
     #     Returns True
@@ -69,7 +69,6 @@ class Map:
         try:
             obstacle = self.obstacles[index]
         except IndexError:
-            print "Obstacle index out of bounds"
             return False
 
         # If given obstacle is already active, there is no need to add it again
@@ -88,7 +87,7 @@ class Map:
             # Going through all elements on each row
             for j in range(width):
 
-                # For storing the old element value in 'matrix_backup' of given obstacle
+                # For storing the old matrix element values
                 row.insert(j, self.matrix[y-i][x+j])
 
                 # If there is padding, adding a grey frame with padding width above and below the obstacle
@@ -101,7 +100,7 @@ class Map:
                 else:
                     self.matrix[y-i][x+j] = 0
 
-            # Storing the old element values in 'matrix_backup' of given obstacle
+            # Storing the old matrix element values in 'matrix_backup' of given obstacle
             obstacle.matrix_backup.insert(i, row)
             
         obstacle.active = True
@@ -109,7 +108,7 @@ class Map:
 
 
     # Takes an Index value
-    # Removes the corresponding Obstacle from 'obstacles' from the 'matrix' of this Map
+    # Removes the corresponding Obstacle from the matrix of this Map
     #
     # If an Obstacle was removed:
     #     Returns True
@@ -119,7 +118,6 @@ class Map:
         try:
             obstacle = self.obstacles[index]
         except IndexError:
-            print "Obstacle index out of bounds"
             return False
 
         # If given obstacle is Not active, there is no need to reset the matrix
@@ -162,7 +160,6 @@ class Map:
         try:
             return self.matrix[iy][ix]
         except IndexError:
-            print "Map element index out of bounds"
             return None
 
 
@@ -187,6 +184,7 @@ class Map:
 
 
 # Takes a path (relative to current directory) to a an image file containing a Map representation
+# (path='/map.png' for file 'map.png, located in current directory)
 # The file should be in '.png'-format
 #
 # Returns an array of rows, where each row is an array of elements
@@ -210,6 +208,4 @@ def readImgToMatrix(path):
                 else:
                     matrix[row][elem] = 2
 
-    #plt.imshow(matrix)
-    #plt.show()
     return matrix

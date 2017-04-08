@@ -72,7 +72,7 @@ class Graph:
         return self.nodes.get((x, y))
 
 
-    # For resetting the parameters used in shortestPath()
+    # For resetting the parameters used by shortestPath()
     def resetGraph(self):
         for node in self.nodes.values():
             node.count = 0
@@ -87,7 +87,6 @@ class Node:
         self.x = x
         self.y = y
         self.out_edges = out_edges if out_edges else []
-        self.in_edges = []
 
         # For use in shortestPath()
         self.count = 0
@@ -109,12 +108,12 @@ class Node:
         return self.x == other.x and self.y == other.y
 
 
-    # Adds an outgoing edge from this Node to the given Node object (without creating duplicates)
+    # Takes another Node object
+    # Adds an outgoing edge from this Node to that Node (without creating duplicates)
     def addOutEdge(self, node):
         out_edge = self.getOutEdge(node.x, node.y)
         if not out_edge:
             self.out_edges.append(node)
-            node.in_edges.append(self)
 
 
     # Takes (x,y)-coordinates for a Node
@@ -137,14 +136,16 @@ class Node:
         return sqrt((to_node.x - self.x)**2 + (to_node.y - self.y)**2)
 
 
-# Takes a path (relative to current directory) to a text file containing a Graph representation
+# Takes a path (relative to current directory), to a text file containing a Graph representation
+# (path='/graph.txt' for file 'graph.txt', located in current directory)
+#
 # The textfile should be in the format specified in 'example_graph.txt'
 #
-# Textfile is assumed to store Graph in mm
+# The textfile is assumed to store Graph in mm
 # The Graph returned by this function is in cm
 #
 # If parsing was completed without syntax errors:
-#     Returns a Graph object with all nodes in its nodelist
+#     Returns a Graph object
 # Otherwise:
 #     Returns None
 def readFileToGraph(path):
@@ -156,6 +157,7 @@ def readFileToGraph(path):
     # Variables for validation of syntax
     begin = False
     valid = False
+
 
     # Opening the file, parsing the lines one by one
     with open(dirpath + path, 'r') as file:
@@ -200,7 +202,7 @@ def readFileToGraph(path):
                             for elem in array:
                                 elem = elem.split(',')
                                 valid = True if len(elem) == 2 and elem[0].isdigit() and elem[1].isdigit() else False
-                                # Break on Syntax error
+                                # Breaking on Syntax error
                                 if not valid:
                                     break
 
@@ -216,7 +218,7 @@ def readFileToGraph(path):
                         elif len(array) == 1:
                             elem = array[0].split(',')
                             valid = True if len(elem) == 2 and elem[1].isdigit() else False
-                            # Break on Syntax error
+                            # Breaking on Syntax error
                             if not valid:
                                 break
 
@@ -241,14 +243,19 @@ def readFileToGraph(path):
                     print "Syntax error on line %s in '%s'" % (line_counter, path)
                     return None
 
+        # Syntax error
+        if begin:
+            print "Syntax error on line %s in '%s'" % (line_counter, path)
+            return None
+
         return graph
 
 
 # Takes a Graph and a filename
 # Stores the Graph data in a file with given filename,
-# in a format that can be re-read by using 'readFileToGraph(path_to_savefile)'
+# in a format that can be re-read by calling 'readFileToGraph(path_to_savefile)'
 #
-# Given Graph is assumed to be in cm
+# The given Graph is assumed to be in cm
 # The textfile created by this function stores the Graph in mm, with one decimal's accuracy and rounded up
 def saveGraphToFile(graph, filename):
     with open(filename, 'w') as file:
@@ -269,7 +276,7 @@ def saveGraphToFile(graph, filename):
 
 # Takes an array of Point objects
 #
-# Given points are assumed to be in mm
+# The given points are assumed to be in mm
 # The Graph returned by this function is in cm
 #
 # Returns a Directed Graph, with an edge from each Point to the next one in the array
@@ -314,14 +321,17 @@ def pointsToGraphCM(points):
 
 
 # For plotting a Graph
-# Parameter 'color' should be in format: 'b' for blue, 'k' for black, etc
-def plotGraph(graph, color, scale=1):
+# (color='b' for blue, color='k' for black, etc)
+def plotGraph(graph, color, arrowheads=False):
     ax = plt.axes()
 
     # Plotting all graph edges
     for node in graph.nodes.values():
         for out_edge in node.out_edges:
-            dx = out_edge.x/scale - node.x/scale
-            dy = out_edge.y/scale - node.y/scale
-            #ax.arrow(node.x/scale, node.y/scale, dx, dy, head_width=8/scale, head_length=10/scale, fc=color, ec=color)
-            ax.arrow(node.x/scale, node.y/scale, dx, dy, fc=color, ec=color)
+            dx = out_edge.x - node.x
+            dy = out_edge.y - node.y
+
+            if arrowheads:
+                ax.arrow(node.x, node.y, dx, dy, head_width=8, head_length=10, fc=color, ec=color)
+            else:
+                ax.arrow(node.x, node.y, dx, dy, fc=color, ec=color)

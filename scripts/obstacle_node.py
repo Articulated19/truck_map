@@ -74,7 +74,7 @@ class ObstacleHandler:
             else:
                 index = int(event.key)-1
 
-            # Checking if there is an obstacle in 'obstacles' that corresponds with given number,
+            # Checking if there is an obstacle in 'obstacles' that corresponds to given number,
             # only proceeding if there is
             try:
                 obstacle = self.obstacles[index]
@@ -115,7 +115,8 @@ class ObstacleHandler:
                 plt.draw()
 
 
-    # Lets user activate/deactivate obstacles on the 'map' of this handler
+    # Lets user activate/deactivate obstacles
+    # When an obstacle is activated/deactivated, the corresponding index is published on topic 'PUBLISH_TOPIC'
     def handleObstacles(self):
         xlim = self.map_img.size[0]
         ylim = self.map_img.size[1]

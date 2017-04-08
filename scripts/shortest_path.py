@@ -69,7 +69,8 @@ def shortestPath(graph, start, end):
 # If given paramaters are invalid:
 #     Returns None
 # If there is at least one alternative path between the given start and end points:
-#     Returns an array of alternative paths between given start and end points
+#     Returns an array of (at most k) alternative paths between them, in order of length (increasing),
+#     where each path is an array of tuples of (x, y)-coordinates
 # Otherwise:
 #     Returns []
 def altPaths(graph, start, end, k):
@@ -82,23 +83,26 @@ def altPaths(graph, start, end, k):
 
     paths = kShortestPaths(graph, start_node, end_node, k+1)
 
-    # If there are any alternative paths, returns all (up to k) alternative paths found
+    # If there are any alternative paths, returns all (at most k) alternative paths found
     if paths:
         return paths[1:]
     else:
         return []
 
 
-# Takes a Graph, two Nodes for start and end point, and the desired number of shortest paths
+# Takes a Graph, two Nodes for start and end point, the desired number of shortest paths,
+# and a Boolean that decides if loops should be allowed or not (optional)
+#
+# By default, loops (i.e. the same Node being visited more than once) are Not allowed
 #
 # If the start Node is the same as the end Node:
 #     Returns []
 # If there is at least one path from the start Node to the end Node:
-#     Returns an array of shortest paths between them, as arrays of tuples of (x, y)-coordinates,
-#     in order of length (increasing)
+#     Returns an array of (at most k) shortest paths between them, in order of length (increasing),
+#     where each path is an array of tuples of (x, y)-coordinates
 # Otherwise:
 #     Returns None
-def kShortestPaths(graph, start_node, end_node, k):
+def kShortestPaths(graph, start_node, end_node, k, allow_loops=False):
     if start_node == end_node:
         return []
 
@@ -121,9 +125,9 @@ def kShortestPaths(graph, start_node, end_node, k):
 
         # Otherwise if the current Node is not already in all k shortest paths,
         # adding all possible paths forward from this Node to the path heap
-        elif current_node.count <= k:
+        elif current_node.count <= k or allow_loops:
             for out_edge in current_node.out_edges:
-                if (out_edge.x, out_edge.y) not in path:
+                if (out_edge.x, out_edge.y) not in path or allow_loops:
                     new_path = []
                     for coord in path:
                         new_path.append(coord)
@@ -140,7 +144,7 @@ def kShortestPaths(graph, start_node, end_node, k):
 
 # Takes a Graph and a VehicleState object
 #
-# If there is a Node with an out-edge in the right Direction (with respect to theta):
+# If there is at least one Node with an out-edge in the right Direction (with respect to theta):
 #     Returns the closest Node which has an out-edge in the right Direction
 # Otherwise:
 #     Returns None
@@ -197,7 +201,8 @@ def getClosestToVehicle(graph, vehicle_state):
     return start_node
 
 
-# Takes an array of Node objects, Point object and range limits to the left resp. to the right
+# Takes an array of Node objects, a Point object, and search range limits
+# (to the left resp. to the right of given Point)
 #
 # Returns an array with all Nodes that are in range (set by given limits) x-wise from given Point
 def getAllInRangeX(nodes, point, range_left, range_right=None):
@@ -212,7 +217,8 @@ def getAllInRangeX(nodes, point, range_left, range_right=None):
     return node_list
 
 
-# Takes an array of Node objects, Point object and range limits above resp. below
+# Takes an array of Node objects, a Point object, and search range limits
+# (above resp. below given Point)
 #
 # Returns an array with all Nodes that are in range (set by given 'limit') y-wise from given Point
 def getAllInRangeY(nodes, point, range_above, range_below=None):
@@ -284,7 +290,7 @@ def getAllInRightDir(nodes, point, direction):
     return node_list
 
 
-# Takes a Node and a Direction
+# Takes a Node object and a Direction
 #
 # If given Node has an out-edge in given Direction:
 #     Returns True
