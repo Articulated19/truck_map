@@ -116,37 +116,43 @@ class RefPath:
 #        else:
 #            print "Path returned"
             #print "Path:", self.path
+
         env = dict(os.environ)
         endpt = pts[0]
+        end = Point(endpt[0], endpt[1])
 
-        #print "self.graph:", self.graph
-        #print "endnode: ", endnode
-        #print "endpt:", endpt
-        #print "hej:", endpt[0]
-        #print "hej2:", endpt[1]
+        search_range = 20
+        nodes = self.graph.nodes.values()
 
+        nodes = getAllInRangeX(getAllInRangeY(nodes, end, search_range), end, search_range)
+        # Returning None if No Node is in range
+        if not nodes:
+            return None
+        # Finding the two Nodes which are closest to the end point, x-wise resp. y-wise
+        closest_x = getClosestX(nodes, end)
+        closest_y = getClosestY(nodes, end)
+        # Selecting the Node which is closest to the end point
+        dx = Node(end.x, end.y).getEdgeLength(closest_x)
+        dy = Node(end.x, end.y).getEdgeLength(closest_y)
+        end_node = closest_x if dx <= dy else closest_y
+
+        pid = os.getpid()
         proc = subprocess.Popen(["../../multi_planner/path_finder/multi_planner.o", str(start_point.x), str(start_point.y),
-            str(201.8), str(95.7)], stdout=subprocess.PIPE, env=env)
-        print "what dafuq is pts:", pts
-        print "here comes output:"
-        i = 0;
+            str(end_node.x), str(end_node.y)], stdout=subprocess.PIPE, env=env)
         self.indexes.append(0)
 
+        i = 0;
         while True:
             line = proc.stdout.readline()
             if (line == ""):
                 print "Done"
                 break
             pt = line.split(',')
-            point = Point(pt[0], pt[1])
             self.path.append((float(pt[0]), float(pt[1])))
-            #self.indexes.append(0)
             i += 1;
-            print point
 
         self.indexes.append(i)
-        print "path: ", self.path
-        print "inde: ", self.indexes
+
         return self.path, self.indexes
 
 
