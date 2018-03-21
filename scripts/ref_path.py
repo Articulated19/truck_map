@@ -116,7 +116,7 @@ class RefPath:
 #        else:
 #            print "Path returned"
             #print "Path:", self.path
-
+        processID = os.getpid()
         env = dict(os.environ)
         endpt = pts[0]
         end = Point(endpt[0], endpt[1])
@@ -136,8 +136,7 @@ class RefPath:
         dy = Node(end.x, end.y).getEdgeLength(closest_y)
         end_node = closest_x if dx <= dy else closest_y
 
-        pid = os.getpid()
-        proc = subprocess.Popen(["../../multi_planner/path_finder/multi_planner.o", str(start_point.x), str(start_point.y),
+        proc = subprocess.Popen(["../../multi_planner/path_finder/multi_planner.o", str(processID), str(start_point.x), str(start_point.y),
             str(end_node.x), str(end_node.y)], stdout=subprocess.PIPE, env=env)
         self.indexes.append(0)
 
