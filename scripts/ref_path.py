@@ -37,6 +37,8 @@ import _tkinter
 from math import sin, cos, radians
 import matplotlib.pyplot as plt
 
+import subprocess
+import os
 
 GRAPH_PATH = '/graph.txt'
 ALT_PATHS = 50  # Maximum number of alternative paths to search for
@@ -85,36 +87,66 @@ class RefPath:
         self.indexes = []
 
         # Adding start point to 'pts'
-        pts.insert(0, (start_point.x, start_point.y))
+#        pts.insert(0, (start_point.x, start_point.y))
 
         # If at least one coordinate point was given
-        if len(pts) > 1:
+#        if len(pts) > 1:
             # Adding start point to path
-            self.path.append((start_point.x, start_point.y))
-            self.indexes.append(0)
+#            self.path.append((start_point.x, start_point.y))
+#            self.indexes.append(0)
 
             # Calculating shortest path between the points
-            for point in pts[1:]:
-                path = shortestPath(self.graph, start_point, Point(point[0], point[1]))
-                if path != None:
-                    self.path += path[1:]
-                    self.indexes.append(len(self.path)-1)
-                    start_point = Point(self.path[-1][0], self.path[-1][1])
+#            for point in pts[1:]:
+#                path = shortestPath(self.graph, start_point, Point(point[0], point[1]))
+#                if path != None:
+#                    self.path += path[1:]
+#                    self.indexes.append(len(self.path)-1)
+#                    start_point = Point(self.path[-1][0], self.path[-1][1])
 
                 # If the given coordinate points were not in range of any Nodes
-                else:
-                    self.path = []
-                    self.indexes = []
-                    print "== ERROR: Reference path out of range for %s" % str(point)
-                    break
+#                else:
+#                    self.path = []
+#                    self.indexes = []
+#                    print "== ERROR: Reference path out of range for %s" % str(point)
+#                    break
 
         # Printing status msg
-        if self.path == []:
-            print "[] returned"
-        else:
-            print "Path returned"
+#        if self.path == []:
+#            print "[] returned"
+#        else:
+#            print "Path returned"
             #print "Path:", self.path
+        env = dict(os.environ)
+        endpt = pts[0]
 
+        #print "self.graph:", self.graph
+        #print "endnode: ", endnode
+        #print "endpt:", endpt
+        #print "hej:", endpt[0]
+        #print "hej2:", endpt[1]
+
+        proc = subprocess.Popen(["../../multi_planner/path_finder/multi_planner.o", str(start_point.x), str(start_point.y),
+            str(201.8), str(95.7)], stdout=subprocess.PIPE, env=env)
+        print "what dafuq is pts:", pts
+        print "here comes output:"
+        i = 0;
+        self.indexes.append(0)
+
+        while True:
+            line = proc.stdout.readline()
+            if (line == ""):
+                print "Done"
+                break
+            pt = line.split(',')
+            point = Point(pt[0], pt[1])
+            self.path.append((float(pt[0]), float(pt[1])))
+            #self.indexes.append(0)
+            i += 1;
+            print point
+
+        self.indexes.append(i)
+        print "path: ", self.path
+        print "inde: ", self.indexes
         return self.path, self.indexes
 
 
@@ -144,7 +176,7 @@ class RefPath:
                 alt_paths[i] = path[:start_index] + alt + path[end_index+1:]
         else:
             alt_paths = []
-        
+
         self.path = path
         self.alt_paths = (alt_paths, start_index, end_index)
         return alt_paths
