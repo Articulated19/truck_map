@@ -38,6 +38,9 @@ from math import sin, cos, radians
 import matplotlib.pyplot as plt
 
 import subprocess
+import socket
+import json
+
 import os
 
 GRAPH_PATH = '/graph.txt'
@@ -74,10 +77,10 @@ class RefPath:
     # Otherwise:
     #     Returns [], []
     def getRefPath(self, vehicle_state, pts):
-        plannerpath = "../../multi_planner/path_finder/multi_planner.o"
+        #plannerpath = "../../multi_planner/path_finder/multi_planner.o"
         #plannerpath = "/home/robin/catkin_ws_clean/src/multi_planner/path_finder"
-        processID = os.getpid()
-        subprocess.call([plannerpath, str(processID), "-clear"], stdout=subprocess.PIPE)
+        #processID = os.getpid()
+        #subprocess.call([plannerpath, str(processID), "-clear"], stdout=subprocess.PIPE)
 
         # Finding the Node (in valid direction) which is closest to the vehicle, to use as a start point
         start_point = getClosestToVehicle(self.graph, vehicle_state)
@@ -140,19 +143,31 @@ class RefPath:
         dy = Node(end.x, end.y).getEdgeLength(closest_y)
         end_node = closest_x if dx <= dy else closest_y
 
-        proc = subprocess.Popen([plannerpath, str(processID), str(start_point.x), str(start_point.y),
-            str(end_node.x), str(end_node.y)], stdout=subprocess.PIPE, env=env)
-        self.indexes.append(0)
+        #proc = subprocess.Popen([plannerpath, str(processID), str(start_point.x), str(start_point.y),
+        #    str(end_node.x), str(end_node.y)], stdout=subprocess.PIPE, env=env)
+        #self.indexes.append(0)
 
-        i = 0;
-        while True:
-            line = proc.stdout.readline()
-            if (line == ""):
-                print "Done"
-                break
-            pt = line.split(',')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data = json.dumps({
+            "id": 2,
+            "startx": start_point.x,
+            "starty": start_point.y,
+            "goalx": end_node.x,
+            "goaly": end_node.y
+        })
+
+        sock.sendto(data.encode(), ("192.168.1.136", 2525))
+
+        received = sock.recv(1024)
+        recievedPath = json.loads(received.decode())
+
+        print recievedPath
+
+        self.indexes.append(0)
+        i = 0
+        for pt in recievedPath:
             self.path.append((float(pt[0]), float(pt[1])))
-            i += 1;
+            i = i + 1
 
         self.indexes.append(i)
 
