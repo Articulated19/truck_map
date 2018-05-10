@@ -31,7 +31,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from shortest_path import *
-
+import rospy
 import warnings
 import _tkinter
 from math import sin, cos, radians
@@ -62,7 +62,8 @@ class RefPath:
         self.graph = readFileToGraph(GRAPH_PATH)
         self.path = []
         self.alt_paths = ([], 0, 0)
-        self.indexes = []
+        self.processId = rospy.get_param('auto_master/id')
+
 
 
     # Takes a VehicleState object, and an array of tuples of (x, y)-coordinates, assumed to be in cm
@@ -79,7 +80,6 @@ class RefPath:
     def getRefPath(self, vehicle_state, pts):
         #plannerpath = "../../multi_planner/path_finder/multi_planner.o"
         #plannerpath = "/home/robin/catkin_ws_clean/src/multi_planner/path_finder"
-        #processID = os.getpid()
         #subprocess.call([plannerpath, str(processID), "-clear"], stdout=subprocess.PIPE)
 
         # Finding the Node (in valid direction) which is closest to the vehicle, to use as a start point
@@ -149,7 +149,8 @@ class RefPath:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         data = json.dumps({
-            "id": 2,
+            "id": self.processId,
+            "remove_node": 0,
             "startx": start_point.x,
             "starty": start_point.y,
             "goalx": end_node.x,
@@ -236,3 +237,22 @@ class RefPath:
             return alt_paths[nth-1]
         except IndexError:
             return []
+
+    def checkIfNodeWasPassed(self, x, y):
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data = json.dumps({
+            "id": self.processId,
+            "remove_node": 1,
+            "x": x,
+            "y": y
+        })
+
+        sock.sendto(data.encode(), ("192.168.1.136", 2525))
+
+        received = sock.recv(1024)
+        deleted = json.loads(received.decode())
+        if deleted == int(1):
+            print "deleted node"
+
+
